@@ -1,0 +1,23 @@
+---
+title: "casestudy2_codebook"
+author: "Chaoshun"
+date: "July 24, 2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\data\\casestudy2.csv")
+```
+## 1. Summary of the data
+```{r,echo=FALSE}
+colnames(talentManage)=abbreviate(colnames(talentManage), method=c("both.sides"),minlength = 11)
+colnames(talentManage)
+summary(talentManage)
+```
+
+## 2. variable description
+```{r,echo=FALSE}
+require(dataMaid)
+summarize(talentManage)
+```
