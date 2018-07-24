@@ -1,4 +1,4 @@
-SMU MSDS 6306 Doing Data Science Case Study 2  
+SMU MSDS 6306 Doing Data Science (Section#405) Case Study 2  
 
 GitHub: https://github.com/chaoshunh/SMU_MSDS/Doing_Data_Science/CaseStudy2.git
 
@@ -9,7 +9,7 @@ Chaoshun | email: chaoshunh@mail.smu.edu phone: 7138762786
 Mehesh | email: @mail.smu.edu phone: 2397287762
 
 
-The purpose of this project was to to conduct exploratory data analysis (EDA) to determine factors that lead to attrition based on multiple regression. This would be fomulated the final presentation "CaseStudy2_Final.pptx"
+The objectivity of this project was to to conduct exploratory data analysis (EDA) to determine factors that lead to attrition based on multiple regression. This would be fomulated the final presentation "CaseStudy2_Final.pptx"
 
 The codebook for this project lists all data files used, along with all analysis steps for the project. It can be found at "CaseStudy2_Codebook.pdf"
 
