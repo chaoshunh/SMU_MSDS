@@ -1,0 +1,98 @@
+---
+title: "SMU MSDS 2008 Summer Case Study2"
+author: "Rene, Chaoshun and Mahesh"
+date: "July 24, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\casestudy2.csv")
+```
+
+## Description
+
+DDSAnalytics is an analytics company that specializes in talent management solutions
+for Fortune 1000 companies. Talent management is defined as the iterative process of developing and retaining programs, identifying high-potential employees and reducing/preventing voluntary employee turnover(attrition). To gain a competitive edge over its competition, DDSAnalytics is planning to leverage data science for talent management. The executive leadership has identified predicting employee turnover as its first application of data science for talent management. Before the business green lights the project, they have tasked your data science team to conduct an analysis of existing employee data.
+
+A dataset(casestudy2.csv) has been converted from original xlsx dataset for us to conduct exploratory data analysis (EDA) to determine factors that lead to attrition.
+
+We should identify (at least) the top three factors that contribute to turnover. There may or may not be a need to create derived attribute/variables.
+
+The business is also interested in learning about any job role specific trends that may exist in the data set. we can also provide any other interesting trends and observations from our analysis.
+
+#### The analysis should be backed up by robust experimentation and (where applicable) appropriate visualization.
+
+Experiments, analysis and visualization must be conducted in R.
+
+## Deliverable:
+
+Create a GitHub repository with an RMarkdown file containing an executive summary, introduction to the project, all supporting code and analysis, and the group presentation.
+
+Submit a link to the GitHub repository via the space provided for the Case Study 02 page in 2DS. 
+
+NO CODE should be present in your presentation. (ie variable names is Mon_Age this should in your presentation as age). You code should be in your GitHub and RMarkdown File.  
+
+
+
+```{r, echo=TRUE}
+summary(talentManage)
+```
+
+## Tasks
+
+### 1.	Formulate your Repo 
+
+a The client wants this to be reproducible and know exactly what you did.  There needs to be an informative Readme, complete with several sections, as referenced in Live Session.  Give contact information, session Info, and the objective of the repo at least. 
+
+
+b	You have a large data set, and it needs its own Codebook, formatted in an approachable way.  Make sure you describe peculiarities of the data by variable and what needs transforming.  However, do not make it too long either.
+
+
+c	Create a file structure that is accessible and transparent.  Document it in the root directory, ideally in the Readme.
+
+
+### 2.	Clean your Raw Data 
+
+a	Read the csv into R and take a look at the data set.  Output how many rows and columns the data.frame is.
+
+
+b	The column names are either too much or not enough.  Change the column names so that they do not have spaces, underscores, slashes, and the like. All column names should be under 12 characters. Make sure you’re updating your codebook with information on the tidied data set as well.
+
+
+c	Some columns are, due to Qualtrics, malfunctioning. 
+
+
+d	Make sure your columns are the proper data types (i.e., numeric, character, etc.).  If they are incorrect, convert them. 
+
+
+### 3.	Preliminary Analysis
+
+a	Remove all observations where the participant is under age 18.  No further analysis of underage individuals is permitted by your client.  Remove any other age outliers as you see fit, but be sure to tell what you’re doing and why.
+
+
+b	Please provide (in table format or similar), descriptive statistics on at least 7 variables (age, Income, etc.).  Create a simple histogram for two of them.  Comment on the shape of the distribution in your markdown.
+
+
+c	Give the frequencies (in table format or similar) for Gender, Education, and Occupation.  They can be separate tables, if that’s your choice.
+
+
+d	Give the counts (again, table) of management positions.
+
+
+### 4.	Deeper Analysis and Visualization 
+
+a	Note: You should make all of these appealing looking.  Remember to include things like a clean, informative title, axis labels that are in plain English, and readable axis values that do not overlap.
+
+
+b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
+
+
+c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
+
+
+d	What about Life Satisfaction?  Create another scatterplot.  Is there a discernible relationship there to what?   
+
+
+
