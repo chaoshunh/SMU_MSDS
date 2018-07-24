@@ -9,10 +9,21 @@ Chaoshun | email: chaoshunh@mail.smu.edu phone: 7138762786
 Mehesh | email: @mail.smu.edu phone: 2397287762
 
 The structure of this project is as follows
-.Docs
-.Reports
-.Scripts
-.Results
+
+/Docs
+  Case Study 02 Updated.docx
+  
+/Reports
+  CaseStudy2_Codebook.pdf
+  CaseStudy2_Final.pptx
+  
+/Scripts
+  CaseStudy2.R
+  
+/Results
+  CaseStudy2.rmd
+  CaseStudy2.html
+  
 README.md
 
 The objectivity of this project was to to conduct exploratory data analysis (EDA) to determine factors that lead to attrition based on multiple regression. This would be fomulated the final presentation "CaseStudy2_Final.pptx"
