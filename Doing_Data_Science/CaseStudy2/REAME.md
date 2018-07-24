@@ -11,24 +11,18 @@ Mehesh | email: @mail.smu.edu phone: 2397287762
 The structure of this project is as follows
 
 /Docs
-
-  Case Study 02 Updated.docx
+	Case Study 02 Updated.docx
   
 /Reports
-
-  CaseStudy2_Codebook.pdf
-  
-  CaseStudy2_Final.pptx
+	CaseStudy2_Codebook.pdf
+  	CaseStudy2_Final.pptx
   
 /Scripts
-
-  CaseStudy2.R
+	CaseStudy2.R
   
 /Results
-
-  CaseStudy2.rmd
-  
-  CaseStudy2.html
+	CaseStudy2.rmd
+  	CaseStudy2.html
   
 README.md
 
