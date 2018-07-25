@@ -6,7 +6,7 @@ This repository is for the case study group of SMU MSDS 6306 405 members:
 
 Rene | email: @mail.smu.edu phone: 50374708866
 Chaoshun | email: chaoshunh@mail.smu.edu phone: 7138762786
-Mehesh | email: @mail.smu.edu phone: 2397287762
+Mahesh | email: mkuklani@mail.smu.edu phone: 2397287762
 
 The structure of this project is as follows
 
