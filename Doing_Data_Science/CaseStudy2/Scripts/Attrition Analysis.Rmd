@@ -231,20 +231,9 @@ ggplot((talentManage), aes(YersAtCmpny, as.numeric(Attrition)-1, color=StckOptnL
   xlab("Years Worked at the Company") + ylab("Attrition")
 ```
 
-Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
-```{r Number of jobs, echo = TRUE}
-ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
-  stat_smooth(method="loess", formula=y~x,
-              alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
-  geom_point(position=position_jitter(height=0.03, width=0)) +
-  xlab("Number of previous Jobs") + ylab("Attrition")
-```
-
 Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
 
 ```{r Additional bar graphs, echo=TRUE, results='asis'}
-par(mfrow = c(3,2))
-
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobSatsfctn, fill = Attrition), position = "fill") +
   labs(x = "Job Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Satisfaction")
@@ -265,12 +254,38 @@ ggplot(data = talentManage) +
   labs(x = "Business Travel", y = "Proportion", title = "Attrition for Business Travel")
 ```
 
+Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
+```{r Number of jobs, echo = TRUE}
+ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Number of previous Jobs") + ylab("Attrition")
+```
+
+
 We see very clear differences in Attrition by Job Role:
 ```{r Job Role chart, echo=TRUE}
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") +
   labs(x = "Job Role", y = "Proportion", title = "Attrition by Job Roles") +
   coord_flip()
+```
+
+Create the new variable `AggSatisfaction` that aggregates closely related variables: `Job Satisfaction`, `Job Involvement`, `Environment Satisfaction` and `Relationship Satisfaction`.
+
+```{r aggregate job satisfaction, echo=TRUE, message=FALSE, warning=FALSE}
+talentManage$AggStsfctn = (as.numeric(talentManage$EnvrnmntSts) + as.numeric(talentManage$JobInvlvmnt) + as.numeric(talentManage$JobSatsfctn) + as.numeric(talentManage$RltnshpStsf)) /4
+```
+
+Explore satisfaction levels by Job Role:
+
+```{r Job Role boxplot, echo=TRUE}
+ggplot(data = talentManage, aes(x=JobRole, y = AggStsfctn, color=JobRole)) + 
+  geom_boxplot() +
+  labs(x = "Job Role", y = "Aggregate Satisfaction", title = "Aggregate Satisfaction by Job Role") +
+  coord_flip() +
+  guides(colour=FALSE)
 ```
 
 ### 4.	Deeper Analysis and Visualization 

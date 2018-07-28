@@ -533,24 +533,10 @@ ggplot((talentManage), aes(YersAtCmpny, as.numeric(Attrition)-1, color=StckOptnL
 
 ![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-4.png)<!-- -->
 
-Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
-
-```r
-ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
-  stat_smooth(method="loess", formula=y~x,
-              alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
-  geom_point(position=position_jitter(height=0.03, width=0)) +
-  xlab("Number of previous Jobs") + ylab("Attrition")
-```
-
-![](Attrition_Analysis_files/figure-html/Number of jobs-1.png)<!-- -->
-
 Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
 
 
 ```r
-par(mfrow = c(3,2))
-
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobSatsfctn, fill = Attrition), position = "fill") +
   labs(x = "Job Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Satisfaction")
@@ -598,6 +584,19 @@ ggplot(data = talentManage) +
 
 ![](Attrition_Analysis_files/figure-html/Additional bar graphs-6.png)<!-- -->
 
+Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
+
+```r
+ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Number of previous Jobs") + ylab("Attrition")
+```
+
+![](Attrition_Analysis_files/figure-html/Number of jobs-1.png)<!-- -->
+
+
 We see very clear differences in Attrition by Job Role:
 
 ```r
@@ -608,6 +607,26 @@ ggplot(data = talentManage) +
 ```
 
 ![](Attrition_Analysis_files/figure-html/Job Role chart-1.png)<!-- -->
+
+Create the new variable `AggSatisfaction` that aggregates closely related variables: `Job Satisfaction`, `Job Involvement`, `Environment Satisfaction` and `Relationship Satisfaction`.
+
+
+```r
+talentManage$AggStsfctn = (as.numeric(talentManage$EnvrnmntSts) + as.numeric(talentManage$JobInvlvmnt) + as.numeric(talentManage$JobSatsfctn) + as.numeric(talentManage$RltnshpStsf)) /4
+```
+
+Explore satisfaction levels by Job Role:
+
+
+```r
+ggplot(data = talentManage, aes(x=JobRole, y = AggStsfctn, color=JobRole)) + 
+  geom_boxplot() +
+  labs(x = "Job Role", y = "Aggregate Satisfaction", title = "Aggregate Satisfaction by Job Role") +
+  coord_flip() +
+  guides(colour=FALSE)
+```
+
+![](Attrition_Analysis_files/figure-html/Job Role boxplot-1.png)<!-- -->
 
 ### 4.	Deeper Analysis and Visualization 
 
