@@ -18,11 +18,11 @@ A high turnover rate typically means working conditions are not optimal, pay is 
 
 Attrition rates vary widely accross industries. The following tables show attrition rates in the United States:
 
-![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) 
+<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) -->
 
 Employee attrition statistics have worsened in recent years, after years of recovery over the recesion of 2008:
 
-![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) 
+<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) --> 
 
 Source: CompData's 2016 edition of their annual BenchmarkPro Survey
 
@@ -314,8 +314,8 @@ summary(sapply(talentManage$Age, function(x) x < 18))
 ```
 
 ```
-##    Mode   FALSE    NA's 
-## logical    1470       0
+##    Mode   FALSE 
+## logical    1470
 ```
 There are no participants under age 18.
 
@@ -327,8 +327,8 @@ summary(sapply(talentManage$Age, function(x) x >= 65))
 ```
 
 ```
-##    Mode   FALSE    NA's 
-## logical    1470       0
+##    Mode   FALSE 
+## logical    1470
 ```
 
 ```r

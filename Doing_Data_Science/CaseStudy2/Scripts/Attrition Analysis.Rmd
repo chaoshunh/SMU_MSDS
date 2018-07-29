@@ -15,11 +15,26 @@ library(dplyr) #For data cleaning and summarizing
 library(ggplot2) #For histograms and other plots
 library(scales) # For formatting in data labels
 library(qwraps2) #For tables and document markdown
+library(car) #For vif
+library(aod) #For wald.test
+library(reshape2)
+library(Hmisc) #For histogram of all variables in a data frame
+library(tidyr)
+library(MASS)
+library(pscl) # For goodness of fit
+library(survey) #For individual predictors 
+library(lmtest)
+library(caret)
+library(pROC)
+library(broom)
+library(purrr) #For keep function
 
 #Load the data
 
-talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
+#talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
 #talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\data\\casestudy2.csv")
+
+talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
 ```
 
 ## Introduction
@@ -30,11 +45,11 @@ A high turnover rate typically means working conditions are not optimal, pay is 
 
 Attrition rates vary widely accross industries. The following tables show attrition rates in the United States:
 
-![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) 
+<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) -->
 
 Employee attrition statistics have worsened in recent years, after years of recovery over the recesion of 2008:
 
-![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) 
+<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) --> 
 
 Source: CompData's 2016 edition of their annual BenchmarkPro Survey
 
@@ -103,6 +118,15 @@ talentManage[,28] <- factor(talentManage[,28])
 #Perform an additional recoding: divide the "Years with Current Manager" variable into three groups
 talentManage[,35] <- cut(talentManage[,35], breaks = c(0,5,10,17), labels = c("0-5", "6-10", "More than 10"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
 
+# remove employeeCount, employeeNumber, Over18 from talentManage
+talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr")] <- list(NULL)
+
+#store and remove monthly Income as we are using log Monthly Income
+MonthlyIncome <- talentManage[,c("MonthlyIncm")]
+
+# Convert Monthly income to log Monthly Income
+talentManage$logMthlyInc <- log(talentManage$MonthlyIncm)
+
 #Check that all variables have the correct 'class'
 str(talentManage)
 ```
@@ -144,7 +168,7 @@ table_numeric
 ```
 
 We want to see the histogram of the `Age` variable:
-```{r histogram Age, echo=FALSE}
+```{r histogram Age, echo=TRUE}
 #Create the required histograms
 ggplot(data = talentManage, mapping = aes(Age)) +
   geom_histogram(binwidth = 5, color = "gray", fill = "royalblue1" ) +
@@ -154,16 +178,22 @@ ggplot(data = talentManage, mapping = aes(Age)) +
 
 The shape of te histogram resembles a normal distribuiton, with a slight positive bias (mean > median)
 
-And now the histogram of the `Income` variable:
+And now the histogram of the `Income` and `log(Income)` variable:
 ```{r histogram income, echo=TRUE}
 ggplot(data = talentManage, mapping = aes(MonthlyIncm)) +
   geom_histogram(binwidth = 1000, color = "gray", fill = "orchid3" ) +
   labs(x = "Montly income (in US$)", y = "Frequency", title = "Histogram of Monthly Income") + 
   scale_x_continuous(label = comma) +
   theme(plot.title = element_text(hjust = 0.5)) 
+
+ggplot(talentManage, aes(talentManage$logMthlyInc)) + 
+  geom_histogram(binwidth=0.5, color="gray", fill="orchid3") +
+  labs(x = "Montly income log(US$)", y = "Frequency", title = "Histogram of Log of Monthly Income") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
 ```
 
-The histogram shows a strong positive skewness, which is typical of Income distributions: a small group of people in the organization have very high salaries. 
+The histogram shows a strong positive skewness, which is typical of Income distributions: a small group of people in the organization have very high salaries. Logarithm of the income gives less skewness so we will proceed with log(MonthlyIncome) 
 
 **c	Give the frequencies (in table format or similar) for Gender, Education, and Occupation.  They can be separate tables, if that’s your choice.**
 ```{r Question 3c, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
@@ -292,14 +322,229 @@ ggplot(data = talentManage, aes(x=JobRole, y = AggStsfctn, color=JobRole)) +
 
 a	Note: You should make all of these appealing looking.  Remember to include things like a clean, informative title, axis labels that are in plain English, and readable axis values that do not overlap.
 
+** Analysis of Data using backward elimination:  
+**** VIF for backward elimination is within 1-2 so there is not a strong correlation between these parameters selected by the model
+```{r deeper analysis, echo=TRUE}
+
+
+talentManage[, c("MonthlyIncm")] <- list(NULL)
+
+# remove column Aggregate satisfaction
+talentManage[, c("AggStsfctn")] <- list(NULL)
+
+fullModel <- glm(Attrition ~ ., data=talentManage, family=binomial)
+
+summary(fullModel)
+
+nothing <- glm(Attrition ~ 1, data=talentManage, family=binomial(link=logit))
+
+summary(nothing)
+
+#backwards = step(fullModel)
+
+backwards = step(fullModel, list(lower=formula(nothing),upper=formula(fullModel)), direction="backward",trace=0)
+ 
+formula(backwards)
+
+summary(backwards)
+
+back2 = glm(Attrition ~ Age + BusinssTrvl + DailyRate + DistncFrmHm + EducatinFld + 
+    EnvrnmntSts + Gender + JobInvlvmnt + JobRole + 
+    JobSatsfctn + NmCmpnsWrkd + OverTime + RltnshpStsf + StckOptnLvl + 
+    TtlWrkngYrs + TrnngTmsLsY + WorkLifBlnc + YrsInCrrntR + YrsSncLstPr + 
+    YrsWthCrrMn + logMthlyInc, data=talentManage, family=binomial(link = logit))
+
+summary(back2)
+
+# Check overall effect of JobRole using aod library
+wald.test(b=coef(back2), Sigma=vcov(back2), Terms=18:25)
+
+# Check overall effect of Education Field using aod library
+wald.test(b=coef(back2), Sigma=vcov(back2), Terms=6:10)
+
+car::vif(back2)
+```
+
+
+** Analysis of Data using forward selection: 
+** Model obtained using forward selection is
+Attrition ~ OverTime + JobRole + StckOptnLvl + JobLevel + EnvrnmntSts +
+    BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
+    TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
+    YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
+    DailyRate + Age
+
+```{r forward selection, echo=TRUE}
+## forward selection
+
+forwards = step(nothing, scope=list(lower=formula(nothing),upper=formula(fullModel)), direction="forward", trace=0)
+
+formula(forwards)
+```
+
+#### Check the vif for the forwards model. We do find that JobLevel and JobRole are highly correlated so doing chi-square test of independence  
+#### Chi- square test reveals that these two variables are independent   
+```{r vif chisq, echo=TRUE}
+# Variance inflation factor
+car::vif(forwards)
+
+#Check whether JobRole and JobLevel are independent
+cJob <- cbind(talentManage$JobRole, talentManage$JobLevel)
+chisq.test(cJob)
+```
+
+### Removing JobLevel since JobRole and JobLevel are highly correlated
+```{r forward2, echo=TRUE}
+forward2 <- glm(Attrition ~ OverTime + JobRole + StckOptnLvl +  EnvrnmntSts +  
+    BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
+    TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
+    YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
+    DailyRate + Age, data=talentManage, family = binomial(link = logit))
+
+summary(forward2)
+
+#Get the correlation plot of the variables selected
+
+#Get the confidence intervals
+exp(cbind(coef(forward2), confint(forward2)))
+
+```
+
+** Analysis of Data using stepwise selection: 
+
+** Deviance obtained by all the above three methods is the same so any method of parameter selection could be used.
+```{r stepwise selection}
+# Stepwise method
+bothways = step(nothing, list(lower=formula(nothing),upper=formula(fullModel)), direction="both",trace=0)
+
+formula(bothways)
+
+backwards$deviance
+forwards$deviance
+bothways$deviance
+
+# Variance inflation factor
+car::vif(bothways)
+```
+
+## Goodness of Fit Test
+*** Check the likelihood ration test of the nothing model with the forwards model as we will be using forwards model.
+*** We get a p-value less than 0.05 so we reject null hypothesis, so our forwards model is better
+```{r likelihood ratio test, echo=TRUE}
+# Goodness of fit using LRT test
+library(lmtest)
+lrtest(forward2, nothing)
+
+# Goodness of fit test Pseudo
+pR2(forward2)
+```
+
+## Test of individual predictors  
+### The 3 best predictors for the model are OverTime, StckOptnLvl, Number of companies worked
+```{r waldtest, echo=TRUE}
+varImp(forward2)
+```
+
+## Pearson Studentized residuals and Standard Errors
+```{r InfluentialObs, echo=TRUE}
+resid(forward2) 
+forward2$residuals
+
+# partial residual plot against fitted values (explanatory variable)
+plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="pearson residual vs Attrition", xlab="Attrition", ylab="Pearson Residual")
+
+#Std.resid and cooks distance broom package augment
+model.data <- augment(forward2) %>% 
+  mutate(index = 1:n()) 
+
+#plot cooksd 
+plot(forward2, which=4, id.n = 5)
+plot(forward2, which=5, id.n = 5)
+plot(forward2, which=6, id.n = 5)
+
+#Plot the standardized residuals:
+ggplot(forward2, aes(.fitted, .resid)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
+  geom_smooth(se=F)
+
+str(forward2)
+
+ggplot(forward2, aes(.fitted, .resid)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
+  geom_smooth(se=F)
+
+#The data for the top 3 largest values, according to the Cook's distance, can be displayed as follow
+model.data %>% top_n(3, .cooksd)
+
+ggplot(model.data, aes(index, .se.fit)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Standard errors for Observation", xlab="Observations", ylab="Standard error")
+```
+
+** Checking for predictions using the parameters selected in the above model
+```{r data for Analysis, echo=TRUE}
+probabilities <- predict(fullModel, type = "response", se=TRUE)
+
+dataForAnalysis <- talentManage %>%
+  dplyr::select_if(is.numeric) 
+
+str(dataForAnalysis)
+
+dataForAnalysis[, rm("log")]
+predictors <- colnames(dataForAnalysis)
+
+# Bind the logit and tidying the data for plot
+#dataForAnalysis <- dataForAnalysis %>%
+#  mutate(logit = log(probabilities/(1-probabilities))) %>%
+#  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
+
+#ggplot(dataForAnalysis, aes(logit, predictor.value))+
+#  geom_point(size = 0.5, alpha = 0.5) +
+#  geom_smooth(method = "loess") + 
+#  theme_bw() + 
+#  facet_wrap(~predictors, scales = "free_y")+
+#  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
+#  theme(plot.title = element_text(hjust = 0.5))
+```
 
 b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
 
+```{r histograms}
+visualize(talentManage)
+
+talentManage %>%
+  keep(is.numeric) %>% 
+  gather() %>% 
+  ggplot(aes(value)) +
+    facet_wrap(~ key, scales = "free") +
+    geom_histogram(binwidth = 10) +
+  labs(title="Histogram", xlab=~ key, ylab="Count")
+
+#hist.data.frame(talentManage)
+
+```
 
 c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
 
+```{r scatterplot1, echo=TRUE}
+
+ggplot(talentManage, aes(Age, MonthlyIncome, color=Gender)) + 
+  geom_point() +
+  labs(title="Scatter plot of Monthly Income vs Age", xlab="Age", ylab="Monthly Income")+
+  geom_smooth(method="lm", alpha=0.05)
+```
 
 d	What about Life Satisfaction?  Create another scatterplot.  Is there a discernible relationship there to what?   
 
-
+```{r}
+ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) + 
+  geom_point() +
+  labs(title="Scatter plot of Monthly Income vs Life Satisfction", xlab="Life Satisfaction", ylab="Monthly Income")+
+  geom_smooth(method="lm", alpha=0.05)
+```
 

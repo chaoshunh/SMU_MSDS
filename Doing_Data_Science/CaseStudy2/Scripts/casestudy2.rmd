@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\data\\casestudy2.csv")
+talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")  #stringsAsFactors = FALSE)
 ```
 
 ## Description
@@ -134,5 +134,73 @@ c	Is there a relationship between Age and Income?  Create a scatterplot and make
 
 d	What about Life Satisfaction?  Create another scatterplot.  Is there a discernible relationship there to what?   
 
+```{r deeperAnalysis, echo=TRUE}
+library(magrittr)
 
+library(tidyverse)
+
+library(broom)
+
+talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
+
+colnames(talentManage)=abbreviate(colnames(talentManage), method=c("both.sides"),minlength = 11)
+
+talentManage$Attrition <- factor(talentManage$Attrition, levels=c("No","Yes"), labels=c(0, 1))
+
+#talentManage2 <- talentManage
+
+#talentManage2$Attrition <- as.numeric(talentManage2$Attrition)
+#talentManage2$BusinssTrvl <- as.numeric(talentManage2$BusinssTrvl)
+#talentManage2$Department <- as.numeric(talentManage2$Department)
+#talentManage2$EducatinFld <- as.numeric(talentManage2$EducatinFld)
+#talentManage2$Gender <- as.numeric(talentManage2$Gender)
+#talentManage2$JobRole <- as.numeric(talentManage2$JobRole)
+#talentManage2$MaritalStts <- as.numeric(talentManage2$MaritalStts)
+#talentManage2$Over18 <- as.numeric(talentManage2$Over18)
+#talentManage2$OverTime <- as.numeric(talentManage2$OverTime)
+
+
+model <- glm(Attrition~Age+Gender+BusinssTrvl+DailyRate+Department+DistncFrmHm+Education+EducatinFld+EnvrnmntSts+HourlyRate+JobInvlvmnt+JobLevel+JobRole+JobSatsfctn+MaritalStts+MonthlyIncm+MonthlyRate, data=talentManage, family=binomial(link=logit))
+summary(model)
+
+# remove over18 column from dataframe
+talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr")] <- list(NULL)
+
+model <- glm(Attrition~., data=talentManage, family=binomial(link=logit))
+summary(model)
+
+probabilities <- predict(model, type = "response")
+
+mydata <- talentManage %>%
+  dplyr::select_if(is.numeric) 
+predictors <- colnames(mydata)
+# Bind the logit and tidying the data for plot
+mydata <- mydata %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(mydata, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")
+
+#Std.resid and cooks distance broom package augment
+model.data <- augment(model) %>% 
+  mutate(index = 1:n()) 
+
+#The data for the top 3 largest values, according to the Cook's distance, can be displayed as follow
+model.data %>% top_n(3, .cooksd)
+
+#Plot the standardized residuals:
+ggplot(model.data, aes(index, .std.resid)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()
+
+ggplot(model.data, aes(index, .se.fit)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()
+# Check for multi-collinearlity
+car::vif(model)
+```
 
