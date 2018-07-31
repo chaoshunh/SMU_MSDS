@@ -8,6 +8,8 @@ output:
   pdf_document: default
 ---
 
+
+
 ```{r Loading packages and data, echo = FALSE, message=FALSE, warning=FALSE}
 #Install Packages
 library(dataMaid) #For quick data visualization
@@ -29,6 +31,9 @@ library(pROC)
 library(broom)
 library(purrr) #For keep function
 
+#getSessionInfo
+sessionInfo()
+
 #Load the data
 
 #talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
@@ -37,6 +42,44 @@ library(purrr) #For keep function
 talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
 ```
 
+## Thanks to RPubs Raju Rimal for this function
+```{r functionDiagPlot, echo=TRUE}
+
+diagPlot<-function(model){
+    p1<-ggplot(model, aes(.fitted, .resid))+geom_point()
+    p1<-p1+stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")
+    p1<-p1+xlab("Fitted values")+ylab("Residuals")
+    p1<-p1+ggtitle("Residual vs Fitted Plot")+theme_bw()
+    
+    p2<-ggplot(model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)
+    p2<-p2+geom_abline(aes(qqline(.stdresid)))+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")
+    p2<-p2+ggtitle("Normal Q-Q")+theme_bw()
+    
+    p3<-ggplot(model, aes(.fitted, sqrt(abs(.stdresid))))+geom_point(na.rm=TRUE)
+    p3<-p3+stat_smooth(method="loess", na.rm = TRUE)+xlab("Fitted Value")
+    p3<-p3+ylab(expression(sqrt("|Standardized residuals|")))
+    p3<-p3+ggtitle("Scale-Location")+theme_bw()
+    
+    p4<-ggplot(model, aes(seq_along(.cooksd), .cooksd))+geom_bar(stat="identity", position="identity")
+    p4<-p4+xlab("Obs. Number")+ylab("Cook's distance")
+    p4<-p4+ggtitle("Cook's distance")+theme_bw()
+    
+    p5<-ggplot(model, aes(.hat, .stdresid))+geom_point(aes(size=.cooksd), na.rm=TRUE)
+    p5<-p5+stat_smooth(method="loess", na.rm=TRUE)
+    p5<-p5+xlab("Leverage")+ylab("Standardized Residuals")
+    p5<-p5+ggtitle("Residual vs Leverage Plot")
+    p5<-p5+scale_size_continuous("Cook's Distance", range=c(1,5))
+    p5<-p5+theme_bw()+theme(legend.position="bottom")
+    
+    p6<-ggplot(model, aes(.hat, .cooksd))+geom_point(na.rm=TRUE)+stat_smooth(method="loess", na.rm=TRUE)
+    p6<-p6+xlab("Leverage hii")+ylab("Cook's Distance")
+    p6<-p6+ggtitle("Cook's dist vs Leverage hii/(1-hii)")
+    p6<-p6+geom_abline(slope=seq(0,3,0.5), color="gray", linetype="dashed")
+    p6<-p6+theme_bw()
+    
+    return(list(rvfPlot=p1, qqPlot=p2, sclLocPlot=p3, cdPlot=p4, rvlevPlot=p5, cvlPlot=p6))
+}
+```
 ## Introduction
 
 Voluntary attrition occurs when an employee leaves a company of his or her own accord. This can occur when employees leave their current positions for another job, leave the workforce entirely, or retire. The reasons for leaving a company can vary from personal reasons, such as desiring career advancement or moving to a different city, to company-based reasons, such as an unwanted change in company structure or management.
@@ -428,8 +471,8 @@ car::vif(bothways)
 ```
 
 ## Goodness of Fit Test
-*** Check the likelihood ration test of the nothing model with the forwards model as we will be using forwards model.
-*** We get a p-value less than 0.05 so we reject null hypothesis, so our forwards model is better
+*** Check the likelihood ratio test of the nothing model with the forwards model as we will be using forwards model.
+*** We get a p-value less than 0.05 so we reject null hypothesis, so our forward2 model is better
 ```{r likelihood ratio test, echo=TRUE}
 # Goodness of fit using LRT test
 library(lmtest)
@@ -442,13 +485,16 @@ pR2(forward2)
 ## Test of individual predictors  
 ### The 3 best predictors for the model are OverTime, StckOptnLvl, Number of companies worked
 ```{r waldtest, echo=TRUE}
-varImp(forward2)
+imp <- as.data.frame(varImp(forward2))
+imp <- data.frame(overall = imp$Overall,
+           names   = rownames(imp))
+imp[order(imp$overall,decreasing = T),]
 ```
 
-## Pearson Studentized residuals and Standard Errors
+## Checking the model with Pearson Studentized residuals, cooksd, leverage and Standard Errors
 ```{r InfluentialObs, echo=TRUE}
-resid(forward2) 
-forward2$residuals
+#resid(forward2) 
+#forward2$residuals
 
 # partial residual plot against fitted values (explanatory variable)
 plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="pearson residual vs Attrition", xlab="Attrition", ylab="Pearson Residual")
@@ -457,11 +503,6 @@ plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="pearson
 model.data <- augment(forward2) %>% 
   mutate(index = 1:n()) 
 
-#plot cooksd 
-plot(forward2, which=4, id.n = 5)
-plot(forward2, which=5, id.n = 5)
-plot(forward2, which=6, id.n = 5)
-
 #Plot the standardized residuals:
 ggplot(forward2, aes(.fitted, .resid)) + 
   geom_point(aes(color = Attrition), alpha = .5) +
@@ -469,13 +510,10 @@ ggplot(forward2, aes(.fitted, .resid)) +
   labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
   geom_smooth(se=F)
 
-str(forward2)
-
-ggplot(forward2, aes(.fitted, .resid)) + 
-  geom_point(aes(color = Attrition), alpha = .5) +
+ggplot(forward2, aes(seq_along(.cooksd), .cooksd)) + 
+  geom_line(aes(color = Attrition), alpha = .5) +
   theme_bw()+
-  labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
-  geom_smooth(se=F)
+  labs(title="Cooks D vs observation number", xlab="Observation Nos", ylab="Cooks D values")
 
 #The data for the top 3 largest values, according to the Cook's distance, can be displayed as follow
 model.data %>% top_n(3, .cooksd)
@@ -484,49 +522,136 @@ ggplot(model.data, aes(index, .se.fit)) +
   geom_point(aes(color = Attrition), alpha = .5) +
   theme_bw()+
   labs(title="Standard errors for Observation", xlab="Observations", ylab="Standard error")
+
+# Residual Vs Leverage
+ggplot(forward2, aes(.hat, .stdresid)) +
+  geom_vline(size = 2, colour = "white", xintercept = 0) +
+  geom_hline(size = 2, colour = "white", yintercept = 0) +
+  geom_point(aes(color = Attrition), alpha = .5) + geom_smooth(se = FALSE) +
+  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+
+ggplot(forward2, aes(.hat, .stdresid)) +
+  geom_point(aes(size = .cooksd, color = Attrition)) +
+  geom_smooth(se = FALSE, size = 0.5) +
+  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+
+# Cooks distance Vs Leverage
+
+ggplot(forward2, aes(.hat, .cooksd)) +
+  geom_vline(xintercept = 0, colour = NA) +
+  geom_abline(slope = seq(0, 3, by = 0.5), colour = "white") +
+  geom_smooth(se = FALSE) +
+  geom_point(aes(color = Attrition), alpha = .5) +
+  labs(title="Cooks D distance Vs Leverage", xlab="Leverage", ylab="Cooks D distance")
 ```
 
-** Checking for predictions using the parameters selected in the above model
+** Checking linear relationship between continuous predictor variables and the logit of the outcome. This can be done by visually inspecting the scatter plot between each predictor and the logit values.  
+
+** We see all other parameters except StandardHrs are all linearly associated
 ```{r data for Analysis, echo=TRUE}
-probabilities <- predict(fullModel, type = "response", se=TRUE)
+probabilities <- predict(fullModel, type = "response")
 
 dataForAnalysis <- talentManage %>%
   dplyr::select_if(is.numeric) 
 
-str(dataForAnalysis)
 
-dataForAnalysis[, rm("log")]
+#dataForAnalysis[, rm("log")]
 predictors <- colnames(dataForAnalysis)
 
-# Bind the logit and tidying the data for plot
-#dataForAnalysis <- dataForAnalysis %>%
-#  mutate(logit = log(probabilities/(1-probabilities))) %>%
-#  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
+#Bind the logit and tidying the data for plot
+dataForAnalysis <- dataForAnalysis %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
 
-#ggplot(dataForAnalysis, aes(logit, predictor.value))+
-#  geom_point(size = 0.5, alpha = 0.5) +
-#  geom_smooth(method = "loess") + 
-#  theme_bw() + 
-#  facet_wrap(~predictors, scales = "free_y")+
-#  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
-#  theme(plot.title = element_text(hjust = 0.5))
+ggplot(dataForAnalysis, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")+
+  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
 
 ```{r histograms}
-visualize(talentManage)
+str(talentManage)
 
-talentManage %>%
-  keep(is.numeric) %>% 
-  gather() %>% 
-  ggplot(aes(value)) +
-    facet_wrap(~ key, scales = "free") +
-    geom_histogram(binwidth = 10) +
-  labs(title="Histogram", xlab=~ key, ylab="Count")
+#age histogram
+age_hist <- as.data.frame.table(table(talentManage$Age))
 
-#hist.data.frame(talentManage)
+ggplot(data = age_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Age", y = "Frequency", title = "Histogram of Age") + 
+  theme(plot.title = element_text(hjust = 0.5))
 
+#Bsiness Travel histogram
+BusinssTrvl_hist <- as.data.frame.table(table(talentManage$BusinssTrvl))
+
+ggplot(data = BusinssTrvl_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Business Travel", y = "Frequency", title = "Business Travel Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Daily Rate histogram
+
+DailyRate <- cut(talentManage[,c("DailyRate")], breaks = c(100,300,600,900,1200,1500), labels = c("100-300", "301-600", "601-900", "901-1200", "1201-1500"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
+
+DailyRate_hist <- as.data.frame.table(table(DailyRate))
+
+ggplot(data = DailyRate_hist, mapping = aes(x=reorder(DailyRate, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Daily Rate", y = "Frequency", title = "Histogram of Daily Rate") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#Department histogram
+Department_hist <- as.data.frame.table(table(talentManage$Department))
+
+ggplot(data = Department_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Department", y = "Frequency", title = "Department Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Distance From Home histogram
+DistncFrmHm_hist <- as.data.frame.table(table(talentManage$DistncFrmHm))
+
+ggplot(data = DistncFrmHm_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Distance From Home", y = "Frequency", title = "Distance From Home Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Education histogram
+Education_hist <- as.data.frame.table(table(talentManage$Education))
+
+ggplot(data = Education_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Education", y = "Frequency", title = "Education Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Education Field histogram
+EducatinFld_hist <- as.data.frame.table(table(talentManage$EducatinFld))
+
+ggplot(data = EducatinFld_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Education Field", y = "Frequency", title = "Education Field Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Environemnt Status histogram
+EnvrnmntSts_hist <- as.data.frame.table(table(talentManage$EnvrnmntSts))
+
+ggplot(data = EnvrnmntSts_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Environment Status", y = "Frequency", title = "Environment Status Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Gender histogram
+Gender_hist <- as.data.frame.table(table(talentManage$Gender))
+
+ggplot(data = Gender_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Gender", y = "Frequency", title = "Gender Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
@@ -546,5 +671,6 @@ ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) +
   geom_point() +
   labs(title="Scatter plot of Monthly Income vs Life Satisfction", xlab="Life Satisfaction", ylab="Monthly Income")+
   geom_smooth(method="lm", alpha=0.05)
+
 ```
 
