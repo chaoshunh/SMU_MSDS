@@ -369,7 +369,6 @@ a	Note: You should make all of these appealing looking.  Remember to include thi
 **** VIF for backward elimination is within 1-2 so there is not a strong correlation between these parameters selected by the model
 ```{r deeper analysis, echo=TRUE}
 
-
 talentManage[, c("MonthlyIncm")] <- list(NULL)
 
 # remove column Aggregate satisfaction
@@ -409,6 +408,36 @@ car::vif(back2)
 ```
 
 
+** Visual Inspection of the model 
+
+** Checking linear relationship between continuous predictor variables and the logit of the outcome. This can be done by visually inspecting the scatter plot between each predictor and the logit values.  
+
+** We see all other parameters except StandardHrs are all linearly associated
+```{r data for Analysis, echo=TRUE}
+probabilities <- predict(fullModel, type = "response")
+
+dataForAnalysis <- talentManage %>%
+  dplyr::select_if(is.numeric) 
+
+
+#dataForAnalysis[, rm("log")]
+predictors <- colnames(dataForAnalysis)
+
+#Bind the logit and tidying the data for plot
+dataForAnalysis <- dataForAnalysis %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(dataForAnalysis, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")+
+  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
 ** Analysis of Data using forward selection: 
 ** Model obtained using forward selection is
 Attrition ~ OverTime + JobRole + StckOptnLvl + JobLevel + EnvrnmntSts +
@@ -431,8 +460,9 @@ formula(forwards)
 # Variance inflation factor
 car::vif(forwards)
 
-#Check whether JobRole and JobLevel are independent
-cJob <- cbind(talentManage$JobRole, talentManage$JobLevel)
+#Check parameters selected are independent
+cJob <- cbind(talentManage$JobLevel, talentManage$JobRole)
+
 chisq.test(cJob)
 ```
 
@@ -545,36 +575,11 @@ ggplot(forward2, aes(.hat, .cooksd)) +
   labs(title="Cooks D distance Vs Leverage", xlab="Leverage", ylab="Cooks D distance")
 ```
 
-** Checking linear relationship between continuous predictor variables and the logit of the outcome. This can be done by visually inspecting the scatter plot between each predictor and the logit values.  
 
-** We see all other parameters except StandardHrs are all linearly associated
-```{r data for Analysis, echo=TRUE}
-probabilities <- predict(fullModel, type = "response")
-
-dataForAnalysis <- talentManage %>%
-  dplyr::select_if(is.numeric) 
-
-
-#dataForAnalysis[, rm("log")]
-predictors <- colnames(dataForAnalysis)
-
-#Bind the logit and tidying the data for plot
-dataForAnalysis <- dataForAnalysis %>%
-  mutate(logit = log(probabilities/(1-probabilities))) %>%
-  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
-
-ggplot(dataForAnalysis, aes(logit, predictor.value))+
-  geom_point(size = 0.5, alpha = 0.5) +
-  geom_smooth(method = "loess") + 
-  theme_bw() + 
-  facet_wrap(~predictors, scales = "free_y")+
-  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
-  theme(plot.title = element_text(hjust = 0.5))
-```
 
 b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
 
-```{r histograms}
+```{r histograms, echo=TRUE}
 str(talentManage)
 
 #age histogram
@@ -652,6 +657,177 @@ ggplot(data = Gender_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
   geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
   labs(x = "Gender", y = "Frequency", title = "Gender Histogram") + 
   theme(plot.title = element_text(hjust = 0.5))
+
+#Hourly Rate histogram
+HourlyRate_hist <- as.data.frame.table(table(talentManage$HourlyRate))
+
+ggplot(data = HourlyRate_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Hourly Rate", y = "Frequency", title = "Hourly Rate Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Involvement histogram
+JobInvlvmnt_hist <- as.data.frame.table(table(talentManage$JobInvlvmnt))
+
+ggplot(data = JobInvlvmnt_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Involvement", y = "Frequency", title = "Job Involvement Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Job Level histogram
+JobLevel_hist <- as.data.frame.table(table(talentManage$JobLevel))
+
+ggplot(data = JobLevel_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Level", y = "Frequency", title = "Job Level Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Role histogram
+JobRole_hist <- as.data.frame.table(table(talentManage$JobRole))
+
+ggplot(data = JobRole_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Role", y = "Frequency", title = "Job Role Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Satisfaction histogram
+JobSatsfctn_hist <- as.data.frame.table(table(talentManage$JobSatsfctn))
+
+ggplot(data = JobSatsfctn_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job satisfaction", y = "Frequency", title = "Job Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Marital Status histogram
+MaritalStts_hist <- as.data.frame.table(table(talentManage$MaritalStts))
+
+ggplot(data = MaritalStts_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Marital Status", y = "Frequency", title = "Maital Status Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Satisfaction histogram
+
+MonthlyRate <- cut(talentManage[,c("MonthlyRate")], breaks = c(0,5000,10000,15000,20000,25000, 30000), labels = c("0-5000", "5001-10000", "10001-15000", "15001-20000", "20001-25000", "25001-30000"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
+
+MonthlyRate_hist <- as.data.frame.table(table(MonthlyRate))
+
+ggplot(data = MonthlyRate_hist, mapping = aes(x=reorder(MonthlyRate, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job satisfaction", y = "Frequency", title = "Job Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Number of Companies worked histogram
+NmCmpnsWrkd_hist <- as.data.frame.table(table(talentManage$NmCmpnsWrkd))
+
+ggplot(data = NmCmpnsWrkd_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Number of companies worked", y = "Frequency", title = "Number of companies worked Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Overtime histogram
+OverTime_hist <- as.data.frame.table(table(talentManage$OverTime))
+
+ggplot(data = OverTime_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Oertime", y = "Frequency", title = "Overtime Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Percent Salary Hike histogram
+PrcntSlryHk_hist <- as.data.frame.table(table(talentManage$PrcntSlryHk))
+
+ggplot(data = PrcntSlryHk_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Percent Salary", y = "Frequency", title = "Percent Salary Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Performance rating histogram
+PrfrmncRtng_hist <- as.data.frame.table(table(talentManage$PrfrmncRtng))
+
+ggplot(data = PrfrmncRtng_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Performance Rating", y = "Frequency", title = "Performance Rating Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Relationship Satisfaction histogram
+RltnshpStsf_hist <- as.data.frame.table(table(talentManage$RltnshpStsf))
+
+ggplot(data = RltnshpStsf_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Relationship Satisfaction", y = "Frequency", title = "Relationship Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Standard Hours histogram
+StandardHrs_hist <- as.data.frame.table(table(talentManage$StandardHrs))
+
+ggplot(data = StandardHrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Standard Hours", y = "Frequency", title = "Standard Hours Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Stock Option Level histogram
+StckOptnLvl_hist <- as.data.frame.table(table(talentManage$StckOptnLvl))
+
+ggplot(data = StckOptnLvl_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Stock Option Level", y = "Frequency", title = "Stock Option Level Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Total Working years histogram
+TtlWrkngYrs_hist <- as.data.frame.table(table(talentManage$TtlWrkngYrs))
+
+ggplot(data = TtlWrkngYrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Total Working Hours", y = "Frequency", title = "Total Working Hours Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Training Time Last Year histogram
+TrnngTmsLsY_hist <- as.data.frame.table(table(talentManage$TrnngTmsLsY))
+
+ggplot(data = TrnngTmsLsY_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Training Time Last Year", y = "Frequency", title = "Training Time Last Year Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Work Life Balance histogram
+WorkLifBlnc_hist <- as.data.frame.table(table(talentManage$WorkLifBlnc))
+
+ggplot(data = WorkLifBlnc_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Work Life Balance", y = "Frequency", title = "Work Life Balance Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years at company histogram
+YersAtCmpny_hist <- as.data.frame.table(table(talentManage$YersAtCmpny))
+
+ggplot(data = YersAtCmpny_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years at Company", y = "Frequency", title = "Years at Company Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years in current role histogram
+YrsInCrrntR_hist <- as.data.frame.table(table(talentManage$YrsInCrrntR))
+
+ggplot(data = YrsInCrrntR_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years in Current Role", y = "Frequency", title = "Years in Current Role Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years since last promotion histogram
+YrsSncLstPr_hist <- as.data.frame.table(table(talentManage$YrsSncLstPr))
+
+ggplot(data = YrsSncLstPr_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years Since Last Promotion", y = "Frequency", title = "Years Since Last Promotion Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years with Current Manager histogram
+YrsWthCrrMn_hist <- as.data.frame.table(table(talentManage$YrsWthCrrMn))
+
+ggplot(data = YrsWthCrrMn_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years with Current Manager", y = "Frequency", title = "Years with Current Manager Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
 ```
 
 c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
