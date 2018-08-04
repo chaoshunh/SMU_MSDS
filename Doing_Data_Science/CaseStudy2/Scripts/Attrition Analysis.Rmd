@@ -30,6 +30,7 @@ library(caret)
 library(pROC)
 library(broom)
 library(purrr) #For keep function
+library(corrplot) # For correlation plot
 
 #getSessionInfo
 sessionInfo()
@@ -162,7 +163,7 @@ talentManage[,28] <- factor(talentManage[,28])
 talentManage[,35] <- cut(talentManage[,35], breaks = c(0,5,10,17), labels = c("0-5", "6-10", "More than 10"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
 
 # remove employeeCount, employeeNumber, Over18 from talentManage
-talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr")] <- list(NULL)
+talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr", "StandardHrs")] <- list(NULL)
 
 #store and remove monthly Income as we are using log Monthly Income
 MonthlyIncome <- talentManage[,c("MonthlyIncm")]
@@ -419,6 +420,8 @@ probabilities <- predict(fullModel, type = "response")
 dataForAnalysis <- talentManage %>%
   dplyr::select_if(is.numeric) 
 
+cor1 <- cor(data.matrix(talentManage), method=c("kendall"))
+corrplot(cor1)
 
 #dataForAnalysis[, rm("log")]
 predictors <- colnames(dataForAnalysis)
@@ -508,7 +511,7 @@ car::vif(bothways)
 library(lmtest)
 lrtest(forward2, nothing)
 
-# Goodness of fit test Pseudo
+# Goodness of fit test using Pseudo R^2
 pR2(forward2)
 ```
 
@@ -519,6 +522,12 @@ imp <- as.data.frame(varImp(forward2))
 imp <- data.frame(overall = imp$Overall,
            names   = rownames(imp))
 imp[order(imp$overall,decreasing = T),]
+
+#print confusion Matrix to predict accuracy
+
+pred <- as.factor(ifelse(predict(forward2, type="response") > 0.5, 1,0))
+ref1 <- as.factor(ifelse(talentManage$Attrition == "Yes", 1, 0))
+confusionMatrix(data = pred, reference = ref1)
 ```
 
 ## Checking the model with Pearson Studentized residuals, cooksd, leverage and Standard Errors
@@ -527,7 +536,7 @@ imp[order(imp$overall,decreasing = T),]
 #forward2$residuals
 
 # partial residual plot against fitted values (explanatory variable)
-plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="pearson residual vs Attrition", xlab="Attrition", ylab="Pearson Residual")
+plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot")
 
 #Std.resid and cooks distance broom package augment
 model.data <- augment(forward2) %>% 
@@ -580,8 +589,6 @@ ggplot(forward2, aes(.hat, .cooksd)) +
 b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
 
 ```{r histograms, echo=TRUE}
-str(talentManage)
-
 #age histogram
 age_hist <- as.data.frame.table(table(talentManage$Age))
 
@@ -758,12 +765,12 @@ ggplot(data = RltnshpStsf_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
 
 #Standard Hours histogram
-StandardHrs_hist <- as.data.frame.table(table(talentManage$StandardHrs))
+#StandardHrs_hist <- as.data.frame.table(table(talentManage$StandardHrs))
 
-ggplot(data = StandardHrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
-  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
-  labs(x = "Standard Hours", y = "Frequency", title = "Standard Hours Histogram") + 
-  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+#ggplot(data = StandardHrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+#  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+#  labs(x = "Standard Hours", y = "Frequency", title = "Standard Hours Histogram") + 
+#  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
 
 #Stock Option Level histogram
 StckOptnLvl_hist <- as.data.frame.table(table(talentManage$StckOptnLvl))
