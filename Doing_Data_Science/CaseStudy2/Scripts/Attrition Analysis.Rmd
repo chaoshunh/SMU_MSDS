@@ -445,7 +445,7 @@ summary(nothing)
 
 ** We see all other parameters except StandardHrs are all linearly associated
 ```{r data for Analysis, echo=TRUE}
-probabilities <- predict(fullModel, type = "response")
+probabilities <- round(predict(fullModel, type = "response"), 2)
 
 dataForAnalysis <- talentManage1 %>%
   dplyr::select_if(is.numeric) 
@@ -528,6 +528,9 @@ wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=10:12)
 
 # Check overall effect of No of companies worked using aod library
 wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=25:33)
+
+# Check overall effect of Environment Status using aod library
+wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=13:15)
 ```
 
 ** Analysis of Data using stepwise selection: 
