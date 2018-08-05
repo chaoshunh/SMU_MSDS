@@ -536,7 +536,7 @@ confusionMatrix(data = pred, reference = ref1)
 #forward2$residuals
 
 # partial residual plot against fitted values (explanatory variable)
-plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot")
+plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot") 
 
 #Std.resid and cooks distance broom package augment
 model.data <- augment(forward2) %>% 
@@ -546,13 +546,15 @@ model.data <- augment(forward2) %>%
 ggplot(forward2, aes(.fitted, .resid)) + 
   geom_point(aes(color = Attrition), alpha = .5) +
   theme_bw()+
-  labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
-  geom_smooth(se=F)
+  labs(title="Studentized residuals vs Fitted values", x="Fitted values", y="Studentized residuals")+
+  geom_smooth(se=F) +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ggplot(forward2, aes(seq_along(.cooksd), .cooksd)) + 
   geom_line(aes(color = Attrition), alpha = .5) +
   theme_bw()+
-  labs(title="Cooks D vs observation number", xlab="Observation Nos", ylab="Cooks D values")
+  labs(title="Cooks D vs observation number", x="Observation Nos", y="Cooks D values") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 #The data for the top 3 largest values, according to the Cook's distance, can be displayed as follow
 model.data %>% top_n(3, .cooksd)
@@ -560,19 +562,22 @@ model.data %>% top_n(3, .cooksd)
 ggplot(model.data, aes(index, .se.fit)) + 
   geom_point(aes(color = Attrition), alpha = .5) +
   theme_bw()+
-  labs(title="Standard errors for Observation", xlab="Observations", ylab="Standard error")
+  labs(title="Standard errors for Observation", x="Observations", y="Standard error") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Residual Vs Leverage
 ggplot(forward2, aes(.hat, .stdresid)) +
   geom_vline(size = 2, colour = "white", xintercept = 0) +
   geom_hline(size = 2, colour = "white", yintercept = 0) +
   geom_point(aes(color = Attrition), alpha = .5) + geom_smooth(se = FALSE) +
-  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+  labs(title="Residual Vs Leverage", x="Leverage", y="Studentized residuals") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 ggplot(forward2, aes(.hat, .stdresid)) +
   geom_point(aes(size = .cooksd, color = Attrition)) +
   geom_smooth(se = FALSE, size = 0.5) +
-  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+  labs(title="Residual Vs Leverage", x="Leverage", y="Studentized residuals") +
+  theme(plot.title = element_text(hjust = 0.5))
 
 # Cooks distance Vs Leverage
 
@@ -581,7 +586,8 @@ ggplot(forward2, aes(.hat, .cooksd)) +
   geom_abline(slope = seq(0, 3, by = 0.5), colour = "white") +
   geom_smooth(se = FALSE) +
   geom_point(aes(color = Attrition), alpha = .5) +
-  labs(title="Cooks D distance Vs Leverage", xlab="Leverage", ylab="Cooks D distance")
+  labs(title="Cooks D distance Vs Leverage", x="Leverage", y="Cooks D distance") +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
 
 
@@ -853,7 +859,8 @@ d	What about Life Satisfaction?  Create another scatterplot.  Is there a discern
 ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) + 
   geom_point() +
   labs(title="Scatter plot of Monthly Income vs Life Satisfction", xlab="Life Satisfaction", ylab="Monthly Income")+
-  geom_smooth(method="lm", alpha=0.05)
+  geom_smooth(method="lm", alpha=0.05) +
+  geom_abline()
 
 ```
 
