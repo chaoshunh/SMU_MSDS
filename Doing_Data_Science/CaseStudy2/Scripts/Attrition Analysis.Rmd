@@ -31,6 +31,7 @@ library(pROC)
 library(broom)
 library(purrr) #For keep function
 library(corrplot) # For correlation plot
+library(epiDisplay) # To calculate C-statistic and ROC curve
 
 #getSessionInfo
 sessionInfo()
@@ -145,6 +146,11 @@ sapply(columns, nchar)
 **d.	Make sure your columns are the proper data types (i.e., numeric, character, etc.).  If they are incorrect, convert them.**
 
 ```{r Question 2c, echo=TRUE, warning=FALSE, message=FALSE}
+#copy the data to a new dataset talentManage1 for analysis
+talentManage1 <- talentManage
+
+str(talentManage1)
+
 #Check the 'class' of each variable column
 lapply(talentManage, class)
 
@@ -164,12 +170,14 @@ talentManage[,35] <- cut(talentManage[,35], breaks = c(0,5,10,17), labels = c("0
 
 # remove employeeCount, employeeNumber, Over18 from talentManage
 talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr", "StandardHrs")] <- list(NULL)
+talentManage1[, c("Over18", "EmployeeCnt", "EmployeNmbr", "StandardHrs")] <- list(NULL)
 
 #store and remove monthly Income as we are using log Monthly Income
 MonthlyIncome <- talentManage[,c("MonthlyIncm")]
 
 # Convert Monthly income to log Monthly Income
 talentManage$logMthlyInc <- log(talentManage$MonthlyIncm)
+talentManage1$logMthlyInc <- log(talentManage$MonthlyIncm)
 
 #Check that all variables have the correct 'class'
 str(talentManage)
@@ -232,7 +240,7 @@ ggplot(data = talentManage, mapping = aes(MonthlyIncm)) +
 
 ggplot(talentManage, aes(talentManage$logMthlyInc)) + 
   geom_histogram(binwidth=0.5, color="gray", fill="orchid3") +
-  labs(x = "Montly income log(US$)", y = "Frequency", title = "Histogram of Log of Monthly Income") +
+  labs(x = "Lof of Montly income log(US$)", y = "Frequency", title = "Histogram of Log of Monthly Income") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
 ```
@@ -368,44 +376,66 @@ a	Note: You should make all of these appealing looking.  Remember to include thi
 
 ** Analysis of Data using backward elimination:  
 **** VIF for backward elimination is within 1-2 so there is not a strong correlation between these parameters selected by the model
-```{r deeper analysis, echo=TRUE}
+```{r deeper analysis, echo=TRUE, warning=FALSE}
 
-talentManage[, c("MonthlyIncm")] <- list(NULL)
+talentManage1[, c("MonthlyIncm")] <- list(NULL)
 
-# remove column Aggregate satisfaction
-talentManage[, c("AggStsfctn")] <- list(NULL)
+#change variables to factors for talentManage1
+talentManage1[,c("Education")] <- as.factor(talentManage1$Education)
+talentManage1[,c("EnvrnmntSts")] <- as.factor(talentManage1$EnvrnmntSts)
+talentManage1[,c("JobInvlvmnt")] <- as.factor(talentManage1$JobInvlvmnt)
+talentManage1[,c("JobLevel")] <- as.factor(talentManage1$JobLevel)
+talentManage1[,c("JobSatsfctn")] <- as.factor(talentManage1$JobSatsfctn)
+talentManage1[,c("PrfrmncRtng")] <- as.factor(talentManage1$PrfrmncRtng)
+talentManage1[,c("StckOptnLvl")] <- as.factor(talentManage1$StckOptnLvl)
+talentManage1[,c("TrnngTmsLsY")] <- as.factor(talentManage1$TrnngTmsLsY)
+talentManage1[,c("WorkLifBlnc")] <- as.factor(talentManage1$WorkLifBlnc)
+talentManage1[,c("NmCmpnsWrkd")] <- as.factor(talentManage1$NmCmpnsWrkd)
 
-fullModel <- glm(Attrition ~ ., data=talentManage, family=binomial)
+str(talentManage1)
+# Regression for full Model
+fullModel <- glm(Attrition ~ Age + BusinssTrvl + DailyRate + Department + DistncFrmHm + 
+    Education + EducatinFld + EnvrnmntSts + Gender + HourlyRate + 
+    JobInvlvmnt + JobLevel + JobRole + JobSatsfctn + MaritalStts + 
+    MonthlyRate + NmCmpnsWrkd + OverTime + PrcntSlryHk + PrfrmncRtng + 
+    RltnshpStsf + StckOptnLvl + TtlWrkngYrs + TrnngTmsLsY + WorkLifBlnc + 
+    YersAtCmpny + YrsInCrrntR + YrsSncLstPr + YrsWthCrrMn + logMthlyInc, data=talentManage1, family=binomial(link = logit))
 
 summary(fullModel)
 
-nothing <- glm(Attrition ~ 1, data=talentManage, family=binomial(link=logit))
+#anova(fullModel, test="Chisq")
+
+#Get the confidence intervals for full Model
+exp(cbind(coef(fullModel), confint(fullModel)))
+
+#Model with only the intercept
+nothing <- glm(Attrition ~ 1, data=talentManage1, family=binomial(link=logit))
 
 summary(nothing)
 
 #backwards = step(fullModel)
 
-backwards = step(fullModel, list(lower=formula(nothing),upper=formula(fullModel)), direction="backward",trace=0)
+#backwards = step(fullModel, list(lower=formula(nothing),upper=formula(fullModel)), direction="backward",trace=0)
  
-formula(backwards)
+#formula(backwards)
 
-summary(backwards)
+#summary(backwards)
 
-back2 = glm(Attrition ~ Age + BusinssTrvl + DailyRate + DistncFrmHm + EducatinFld + 
-    EnvrnmntSts + Gender + JobInvlvmnt + JobRole + 
-    JobSatsfctn + NmCmpnsWrkd + OverTime + RltnshpStsf + StckOptnLvl + 
-    TtlWrkngYrs + TrnngTmsLsY + WorkLifBlnc + YrsInCrrntR + YrsSncLstPr + 
-    YrsWthCrrMn + logMthlyInc, data=talentManage, family=binomial(link = logit))
+#back2 = glm(Attrition ~ Age + BusinssTrvl + DailyRate + DistncFrmHm + EducatinFld + 
+#    EnvrnmntSts + Gender + JobInvlvmnt + JobRole + 
+#    JobSatsfctn + NmCmpnsWrkd + OverTime + RltnshpStsf + StckOptnLvl + 
+#    TtlWrkngYrs + TrnngTmsLsY + WorkLifBlnc + YrsInCrrntR + YrsSncLstPr + 
+#    YrsWthCrrMn + logMthlyInc, data=talentManage, family=binomial(link = logit))
 
-summary(back2)
+#summary(back2)
 
 # Check overall effect of JobRole using aod library
-wald.test(b=coef(back2), Sigma=vcov(back2), Terms=18:25)
+#wald.test(b=coef(back2), Sigma=vcov(back2), Terms=18:25)
 
 # Check overall effect of Education Field using aod library
-wald.test(b=coef(back2), Sigma=vcov(back2), Terms=6:10)
+#wald.test(b=coef(back2), Sigma=vcov(back2), Terms=6:10)
 
-car::vif(back2)
+#car::vif(back2)
 ```
 
 
@@ -417,10 +447,10 @@ car::vif(back2)
 ```{r data for Analysis, echo=TRUE}
 probabilities <- predict(fullModel, type = "response")
 
-dataForAnalysis <- talentManage %>%
+dataForAnalysis <- talentManage1 %>%
   dplyr::select_if(is.numeric) 
 
-cor1 <- cor(data.matrix(talentManage), method=c("kendall"))
+cor1 <- cor(data.matrix(talentManage1), method=c("kendall"))
 corrplot(cor1)
 
 #dataForAnalysis[, rm("log")]
@@ -464,7 +494,7 @@ formula(forwards)
 car::vif(forwards)
 
 #Check parameters selected are independent
-cJob <- cbind(talentManage$JobLevel, talentManage$JobRole)
+cJob <- cbind(talentManage1$JobLevel, talentManage1$JobRole)
 
 chisq.test(cJob)
 ```
@@ -475,7 +505,7 @@ forward2 <- glm(Attrition ~ OverTime + JobRole + StckOptnLvl +  EnvrnmntSts +
     BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
     TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
     YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
-    DailyRate + Age, data=talentManage, family = binomial(link = logit))
+    DailyRate + Age, data=talentManage1, family = binomial(link = logit))
 
 summary(forward2)
 
@@ -484,6 +514,20 @@ summary(forward2)
 #Get the confidence intervals
 exp(cbind(coef(forward2), confint(forward2)))
 
+# Variance inflation factor
+car::vif(forward2)
+
+# How accurate our test is
+lroc(forward2)
+
+# Check overall effect of JobRole using aod library
+wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=2:9)
+
+# Check overall effect of Stock Option Level using aod library
+wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=10:12)
+
+# Check overall effect of No of companies worked using aod library
+wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=25:33)
 ```
 
 ** Analysis of Data using stepwise selection: 
@@ -495,12 +539,19 @@ bothways = step(nothing, list(lower=formula(nothing),upper=formula(fullModel)), 
 
 formula(bothways)
 
-backwards$deviance
-forwards$deviance
-bothways$deviance
+summary(bothways)
 
 # Variance inflation factor
 car::vif(bothways)
+
+# get the variance of all the models
+# backwards$deviance
+forwards$deviance
+bothways$deviance
+
+#AIC values
+cbind(forwards$aic, bothways$aic)
+
 ```
 
 ## Goodness of Fit Test
@@ -508,11 +559,32 @@ car::vif(bothways)
 *** We get a p-value less than 0.05 so we reject null hypothesis, so our forward2 model is better
 ```{r likelihood ratio test, echo=TRUE}
 # Goodness of fit using LRT test
+# Null hypothesis is that restricted model is statistically better than the unrestricted model
+# nothing is the restricted model as it has only intercept whereas forward2 model has more variables
 library(lmtest)
 lrtest(forward2, nothing)
 
+# using manual calculation for lrttest
+#logLik(nothing)
+#logLik(forward2)
+# Calculate 2(loglikelihood of unrestricted model - loglikelihood of restricted model)
+# gives computed value for LR
+#2* (649.2914 - 409.8262)
+# Get critcal value for LRTest, get df from logLik
+#qchisq(0.95, 1)
+
+# Same lrttest can be done using anova.
+#anova(forward2, nothing, test="LRT")
+
+# F test to test predictors after accounting for all others
+drop1(forward2, test="F")
+
 # Goodness of fit test using Pseudo R^2
 pR2(forward2)
+
+# Goodness of fit using the Hosmer-Lemeshow in R
+#library(ResourceSelection)
+#hl <- hoslem.test(forward2$model$Attrition, fitted(forward2), g=10)
 ```
 
 ## Test of individual predictors  
@@ -524,9 +596,8 @@ imp <- data.frame(overall = imp$Overall,
 imp[order(imp$overall,decreasing = T),]
 
 #print confusion Matrix to predict accuracy
-
 pred <- as.factor(ifelse(predict(forward2, type="response") > 0.5, 1,0))
-ref1 <- as.factor(ifelse(talentManage$Attrition == "Yes", 1, 0))
+ref1 <- as.factor(ifelse(talentManage1$Attrition == "Yes", 1, 0))
 confusionMatrix(data = pred, reference = ref1)
 ```
 
@@ -536,7 +607,7 @@ confusionMatrix(data = pred, reference = ref1)
 #forward2$residuals
 
 # partial residual plot against fitted values (explanatory variable)
-plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot") 
+plot(residuals(forward2, type="pearson") ~ talentManage1$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot") 
 
 #Std.resid and cooks distance broom package augment
 model.data <- augment(forward2) %>% 
@@ -847,7 +918,7 @@ c	Is there a relationship between Age and Income?  Create a scatterplot and make
 
 ```{r scatterplot1, echo=TRUE}
 
-ggplot(talentManage, aes(Age, MonthlyIncome, color=Gender)) + 
+ggplot(talentManage1, aes(Age, MonthlyIncome, color=Gender)) + 
   geom_point() +
   labs(title="Scatter plot of Monthly Income vs Age", xlab="Age", ylab="Monthly Income")+
   geom_smooth(method="lm", alpha=0.05)
