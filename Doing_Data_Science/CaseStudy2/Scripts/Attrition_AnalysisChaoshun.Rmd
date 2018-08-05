@@ -1,0 +1,884 @@
+---
+title: 'Analysis of Attrition Data: Main factors that affect Employee Turnover'
+author: "Chaoshun Hu, Mahesh Kuklani, Rene Pineda"
+date: "August 7, 2018"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
+---
+
+
+
+```{r Loading packages and data, echo = FALSE, message=FALSE, warning=FALSE}
+#Install Packages
+library(dataMaid) #For quick data visualization
+library(dplyr) #For data cleaning and summarizing
+library(ggplot2) #For histograms and other plots
+library(scales) # For formatting in data labels
+library(qwraps2) #For tables and document markdown
+library(car) #For vif
+library(aod) #For wald.test
+library(reshape2)
+library(Hmisc) #For histogram of all variables in a data frame
+library(tidyr)
+library(MASS)
+library(pscl) # For goodness of fit
+library(survey) #For individual predictors 
+library(lmtest)
+library(caret)
+library(pROC)
+library(broom)
+library(purrr) #For keep function
+library(corrplot) # For correlation plot
+
+#getSessionInfo
+sessionInfo()
+
+#Load the data
+
+#talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
+talentManage <-read.csv("/Users/chux/Desktop/SMUclasses/datascience/CaseStudy2/data/casestudy2.csv")
+
+#talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
+```
+
+## Thanks to RPubs Raju Rimal for this function
+```{r functionDiagPlot, echo=TRUE}
+
+diagPlot<-function(model){
+    p1<-ggplot(model, aes(.fitted, .resid))+geom_point()
+    p1<-p1+stat_smooth(method="loess")+geom_hline(yintercept=0, col="red", linetype="dashed")
+    p1<-p1+xlab("Fitted values")+ylab("Residuals")
+    p1<-p1+ggtitle("Residual vs Fitted Plot")+theme_bw()
+    
+    p2<-ggplot(model, aes(qqnorm(.stdresid)[[1]], .stdresid))+geom_point(na.rm = TRUE)
+    p2<-p2+geom_abline(aes(qqline(.stdresid)))+xlab("Theoretical Quantiles")+ylab("Standardized Residuals")
+    p2<-p2+ggtitle("Normal Q-Q")+theme_bw()
+    
+    p3<-ggplot(model, aes(.fitted, sqrt(abs(.stdresid))))+geom_point(na.rm=TRUE)
+    p3<-p3+stat_smooth(method="loess", na.rm = TRUE)+xlab("Fitted Value")
+    p3<-p3+ylab(expression(sqrt("|Standardized residuals|")))
+    p3<-p3+ggtitle("Scale-Location")+theme_bw()
+    
+    p4<-ggplot(model, aes(seq_along(.cooksd), .cooksd))+geom_bar(stat="identity", position="identity")
+    p4<-p4+xlab("Obs. Number")+ylab("Cook's distance")
+    p4<-p4+ggtitle("Cook's distance")+theme_bw()
+    
+    p5<-ggplot(model, aes(.hat, .stdresid))+geom_point(aes(size=.cooksd), na.rm=TRUE)
+    p5<-p5+stat_smooth(method="loess", na.rm=TRUE)
+    p5<-p5+xlab("Leverage")+ylab("Standardized Residuals")
+    p5<-p5+ggtitle("Residual vs Leverage Plot")
+    p5<-p5+scale_size_continuous("Cook's Distance", range=c(1,5))
+    p5<-p5+theme_bw()+theme(legend.position="bottom")
+    
+    p6<-ggplot(model, aes(.hat, .cooksd))+geom_point(na.rm=TRUE)+stat_smooth(method="loess", na.rm=TRUE)
+    p6<-p6+xlab("Leverage hii")+ylab("Cook's Distance")
+    p6<-p6+ggtitle("Cook's dist vs Leverage hii/(1-hii)")
+    p6<-p6+geom_abline(slope=seq(0,3,0.5), color="gray", linetype="dashed")
+    p6<-p6+theme_bw()
+    
+    return(list(rvfPlot=p1, qqPlot=p2, sclLocPlot=p3, cdPlot=p4, rvlevPlot=p5, cvlPlot=p6))
+}
+```
+## Introduction
+
+Voluntary attrition occurs when an employee leaves a company of his or her own accord. This can occur when employees leave their current positions for another job, leave the workforce entirely, or retire. The reasons for leaving a company can vary from personal reasons, such as desiring career advancement or moving to a different city, to company-based reasons, such as an unwanted change in company structure or management.
+
+A high turnover rate typically means working conditions are not optimal, pay is below market average, or staffers are not well trained. Concurrently, a low turnover rate is indicative of a work environment where staffers feel appreciated, work as a team, have room to move up the corporate ladder, and are satisfied with their jobs.
+
+Attrition rates vary widely accross industries. The following tables show attrition rates in the United States:
+
+#<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) -->
+
+Employee attrition statistics have worsened in recent years, after years of recovery over the recesion of 2008:
+
+#<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) --> 
+
+Source: CompData's 2016 edition of their annual BenchmarkPro Survey
+
+Companies usually would like to decrease their voluntary turnover rates due to numerous unfavorable impacts:
+
+* Overall poor company performance
+
+* Low employee morale
+
+* Operating and monetary costs (severance payments, cost of re-hiring and re-training)
+
+* Money invested in the employees that leave the company can't be recovered
+
+* The decrease in the workforce causes remaining employees to work on the slack left behind- mostly performing the task they are not completely trained to perform or are not the best suited
+
+* The situation may get out of control and lead to mass exit of employees, disabling the ability of the company to perform at a high level.
+
+In order to deal with employee attrition and deal with its negative impacts, it is important to know about the most important causes of Attrition. The purpose of this analysis is to try to dilucidate what are the most important factors that contribute to attrition, amongst the many factors that affect an employee's environment and satisfaction. Once these factors are determined, a company can take actions to control them. 
+
+
+### 2.	Loading and cleaning the data 
+
+**a	Read the csv into R and take a look at the data set.  Output how many rows and columns the data.frame is.**
+```{r Question 2a, echo=TRUE, warning=FALSE, message=FALSE}
+
+#output the dimension size
+dim(talentManage)
+```
+The `talentManage` data frame has 1470 rows and 35 columns. 
+
+**b	The column names are either too much or not enough.  Change the column names so that they do not have spaces, underscores, slashes, and the like. All column names should be under 12 characters. Make sure you’re updating your codebook with information on the tidied data set as well.**
+
+We use an R function to automatically abbreviate the variable names:
+```{r Question 2b, echo=TRUE, warning=FALSE, message=FALSE}
+#List column names
+colnames(talentManage)
+
+#Abbreviate column names
+colnames(talentManage)=abbreviate(colnames(talentManage), method=c("both.sides"),minlength = 11)
+```
+
+We will now list the column names again and count the characters to confirm confirm that none exceeds the 12-character limit
+```{r echo=TRUE, warning=FALSE, message=FALSE}
+columns <- colnames(talentManage)
+columns
+sapply(columns, nchar)
+```
+
+**c.	Some columns are, due to Qualtrics, malfunctioning. **
+```{r}
+#basic statistics (EDA)
+visualize(talentManage)
+```
+
+from all the histogramm, we found there are eight columns data doesn't show normality. They are
+"DailyRate", "MonthlyRate", "Over18", "EmployeeCount", "StandardHours", "EducationField","HourlyRate".
+However, we don't kick off these columns at this step.
+
+
+**d.	Make sure your columns are the proper data types (i.e., numeric, character, etc.).  If they are incorrect, convert them.**
+
+```{r Question 2c, echo=TRUE, warning=FALSE, message=FALSE}
+#Check the 'class' of each variable column
+lapply(talentManage, class)
+
+#Recode variables from 'numeric' to 'factor'
+columns[7]
+talentManage[,7] <- factor(talentManage[,7], labels = c("Below College", "College", "Bachelor", "Master", "Doctor"), ordered = TRUE)
+columns[11]
+talentManage[,11] <- factor(talentManage[,11], labels = c('Low', 'Medium', 'High', 'Very High'), ordered = TRUE)
+columns[14]
+talentManage[,14] <- factor(talentManage[,14], labels = c('Low', 'Medium', 'High', 'Very High'), ordered = TRUE)
+columns[17]
+talentManage[,17] <- factor(talentManage[,17], labels = c('Low', 'Medium', 'High', 'Very High'), ordered = TRUE)
+columns[25]
+talentManage[,25] <- factor(talentManage[,25], labels = c('Excellent', 'Outstanding'), ordered = TRUE)
+columns[26]
+talentManage[,26] <- factor(talentManage[,26], labels = c('Low', 'Medium', 'High', 'Very High'), ordered = TRUE)
+columns[31]
+talentManage[,31] <- factor(talentManage[,31], labels = c('Bad', 'Good', 'Better', 'Best'), ordered = TRUE)
+columns[15]
+talentManage[,15] <- factor(talentManage[,15], ordered = TRUE)
+columns[28]
+talentManage[,28] <- factor(talentManage[,28])
+
+#Perform an additional recoding: divide the "Years with Current Manager" variable into three groups
+talentManage[,35] <- cut(talentManage[,35], breaks = c(0,5,10,17), labels = c("0-5", "6-10", "More than 10"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
+
+# remove employeeCount, employeeNumber, Over18 from talentManage
+talentManage[, c("Over18", "EmployeeCnt", "EmployeNmbr", "StandardHrs")] <- list(NULL)
+
+#store and remove monthly Income as we are using log Monthly Income
+MonthlyIncome <- talentManage[,c("MonthlyIncm")]
+
+# Convert Monthly income to log Monthly Income
+talentManage$logMthlyInc <- log(talentManage$MonthlyIncm)
+
+#Check that all variables have the correct 'class'
+str(talentManage)
+```
+
+### 3.	Preliminary Analysis
+
+**a	Remove all observations where the participant is under age 18.  No further analysis of underage individuals is permitted by your client.  Remove any other age outliers as you see fit, but be sure to tell what you’re doing and why.**
+
+First we apply a function to check whether there are participants under age 18:
+```{r Question 3a, echo=TRUE, warning=FALSE, message=FALSE}
+#Check every value of the 'Age' variable to see whether it is smaller than 18
+summary(sapply(talentManage$Age, function(x) x < 18))
+```
+There are no participants under age 18.
+
+Regarding outliers, we might want to remove participants who have passed the age of retirement (65 years old, although this has increased due to SS ammendments) and that might be having a negative impact in attrition rates, because attrition would be disproportionately high in this group. We can check this in the data
+```{r Question 3aout, echo=TRUE, warning=FALSE, message=FALSE}
+#Check every value of the 'Age' variable to see whether it is smaller than 18
+summary(sapply(talentManage$Age, function(x) x >= 65))
+retirement <- subset(talentManage$Age, talentManage$Age >=60)
+retirement  
+```
+We do not have instances of people 65 years old or older, and only a handful of participants are 60 years old. We proceed without eliminating any data points. 
+
+**b	Please provide (in table format or similar), descriptive statistics on at least 7 variables (age, Income, etc.).  Create a simple histogram for two of them.  Comment on the shape of the distribution in your markdown.**
+```{r Question 3b, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
+options(qwraps2_markup = "markdown")
+summary_numeric <- with(talentManage,
+                list("Age" = tab_summary(Age)[c(1,4,2,3)],
+                     "Monthly Income" = tab_summary(MonthlyIncm)[c(1,4,2,3)],
+                     "Distance From Home" = tab_summary(DistncFrmHm)[c(1,4,2,3)],
+                     "Number of Companies Worked In" = tab_summary(NmCmpnsWrkd)[c(1,4,2,3)],
+                     "Percent Salary Raise" = tab_summary(PrcntSlryHk)[c(1,4,2,3)],
+                     "Total working Years" = tab_summary(TtlWrkngYrs)[c(1,4,2,3)],
+                     "Years at Company" = tab_summary(YersAtCmpny)[c(1,4,2,3)]))
+                     
+table_numeric <- summary_table(talentManage, summary_numeric)
+table_numeric
+```
+
+We want to see the histogram of the `Age` variable:
+```{r histogram Age, echo=TRUE}
+#Create the required histograms
+ggplot(data = talentManage, mapping = aes(Age)) +
+  geom_histogram(binwidth = 5, color = "gray", fill = "royalblue1" ) +
+  labs(x = "Age", y = "Frequency", title = "Histogram of Age") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+The shape of te histogram resembles a normal distribuiton, with a slight positive bias (mean > median)
+
+And now the histogram of the `Income` and `log(Income)` variable:
+```{r histogram income, echo=TRUE}
+ggplot(data = talentManage, mapping = aes(MonthlyIncm)) +
+  geom_histogram(binwidth = 1000, color = "gray", fill = "orchid3" ) +
+  labs(x = "Montly income (in US$)", y = "Frequency", title = "Histogram of Monthly Income") + 
+  scale_x_continuous(label = comma) +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+ggplot(talentManage, aes(talentManage$logMthlyInc)) + 
+  geom_histogram(binwidth=0.5, color="gray", fill="orchid3") +
+  labs(x = "Montly income log(US$)", y = "Frequency", title = "Histogram of Log of Monthly Income") +
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+```
+
+The histogram shows a strong positive skewness, which is typical of Income distributions: a small group of people in the organization have very high salaries. Logarithm of the income gives less skewness so we will proceed with log(MonthlyIncome) 
+
+**c	Give the frequencies (in table format or similar) for Gender, Education, and Occupation.  They can be separate tables, if that’s your choice.**
+```{r Question 3c, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
+# Summarize categorical variables with counts
+
+summary_factor <- with(talentManage,
+                list("Gender" = tab_summary(factor(Gender)),
+                     "Education" = tab_summary(factor(Education)),
+                     "Ocupation" = tab_summary(factor(EducatinFld))))
+
+table_factor <- summary_table(talentManage, summary_factor)
+table_factor
+```
+
+**d	Give the counts (again, table) of management positions.**
+```{r Question 3d, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
+summary_positions <- with(talentManage,
+                     list("Management Positions" = tab_summary(factor(JobLevel[JobLevel == 3 | JobLevel ==4 | JobLevel ==5]))))
+
+table_positions <- summary_table(talentManage, summary_positions)
+table_positions
+```
+
+### Additional Analysis
+
+Examine the proportion of attrition vs. No Attrition
+
+```{r echo = TRUE}
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = Attrition, fill = Attrition)) +
+  annotate("text", label = "Yes = 233, or 15.9%", y=350, x=2) +
+  annotate("text", label = "No = 1237, or 84.1%", y=1300, x=1) +
+  labs(x = "Attrition", y = "Total", title = "Summary of Attrition") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  guides(fill=FALSE)
+```
+
+Investigate whether there are differences in attrition by continuous and categorical variables (Age and Gender, Marital Status and distance from home, Income and Job Level)
+```{r echo = TRUE}
+#Graphing Age and Gender
+ggplot((talentManage), aes(Age, as.numeric(Attrition)-1, color=Gender)) +
+  stat_smooth(method="loess", formula=y~x, alpha=0.2, size=2, aes(fill=Gender)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  labs(title = "Attrition levels by age and gender", x= "Age", y = "Proportion of Attrition")
+
+# Using distance from home and Marital Status:
+ggplot((talentManage), aes(DistncFrmHm, as.numeric(Attrition)-1, color=MaritalStts)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=MaritalStts)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Distance from Home") + ylab("Attrition")
+
+# Using Montly Income and Job Level:
+ggplot((talentManage), aes(MonthlyIncm, as.numeric(Attrition)-1, color=JobLevel)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=JobLevel)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Monthly Income in US$") + ylab("Attrition")
+
+# Using Years in the Company
+ggplot((talentManage), aes(YersAtCmpny, as.numeric(Attrition)-1, color=StckOptnLvl)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=StckOptnLvl)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Years Worked at the Company") + ylab("Attrition")
+```
+
+Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
+
+```{r Additional bar graphs, echo=TRUE, results='asis'}
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = JobSatsfctn, fill = Attrition), position = "fill") +
+  labs(x = "Job Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Satisfaction")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = JobInvlvmnt, fill = Attrition), position = "fill") +
+  labs(x = "Job Involvement (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Involvement")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = Department, fill = Attrition), position = "fill") +
+  labs(x = "Department", y = "Proportion", title = "Attrition by Department")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = YrsWthCrrMn, fill = Attrition), position = "fill") +
+  labs(x = "Years with Current Manager", y = "Proportion", title = "Attrition levels by Years with Current Manager")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = RltnshpStsf, fill = Attrition), position = "fill") +
+  labs(x = "Relationship Satisfaction", y = "Proportion", title = "Attrition by Relationship Satisfaction")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = BusinssTrvl, fill = Attrition), position = "fill") +
+  labs(x = "Business Travel", y = "Proportion", title = "Attrition for Business Travel")
+```
+
+Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
+```{r Number of jobs, echo = TRUE}
+ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Number of previous Jobs") + ylab("Attrition")
+```
+
+
+We see very clear differences in Attrition by Job Role:
+```{r Job Role chart, echo=TRUE}
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") +
+  labs(x = "Job Role", y = "Proportion", title = "Attrition by Job Roles") +
+  coord_flip()
+```
+
+Create the new variable `AggSatisfaction` that aggregates closely related variables: `Job Satisfaction`, `Job Involvement`, `Environment Satisfaction` and `Relationship Satisfaction`.
+
+```{r aggregate job satisfaction, echo=TRUE, message=FALSE, warning=FALSE}
+talentManage$AggStsfctn = (as.numeric(talentManage$EnvrnmntSts) + as.numeric(talentManage$JobInvlvmnt) + as.numeric(talentManage$JobSatsfctn) + as.numeric(talentManage$RltnshpStsf)) /4
+```
+
+Explore satisfaction levels by Job Role:
+
+```{r Job Role boxplot, echo=TRUE}
+ggplot(data = talentManage, aes(x=JobRole, y = AggStsfctn, color=JobRole)) + 
+  geom_boxplot() +
+  labs(x = "Job Role", y = "Aggregate Satisfaction", title = "Aggregate Satisfaction by Job Role") +
+  coord_flip() +
+  guides(colour=FALSE)
+```
+
+### 4.	Deeper Analysis and Visualization 
+
+a	Note: You should make all of these appealing looking.  Remember to include things like a clean, informative title, axis labels that are in plain English, and readable axis values that do not overlap.
+
+** Analysis of Data using backward elimination:  
+**** VIF for backward elimination is within 1-2 so there is not a strong correlation between these parameters selected by the model
+```{r deeper analysis, echo=TRUE}
+
+talentManage[, c("MonthlyIncm")] <- list(NULL)
+
+# remove column Aggregate satisfaction
+talentManage[, c("AggStsfctn")] <- list(NULL)
+
+# columns we used for full model
+columns <- colnames(talentManage)
+columns
+length(columns)
+
+fullModel <- glm(Attrition ~ ., data=talentManage, family=binomial)
+
+summary(fullModel)
+
+nothing <- glm(Attrition ~ 1, data=talentManage, family=binomial(link=logit))
+
+summary(nothing)
+
+#backwards = step(fullModel)
+
+backwards = step(fullModel, list(lower=formula(nothing),upper=formula(fullModel)), direction="backward",trace=0)
+ 
+formula(backwards)
+
+summary(backwards)
+
+back2 = glm(Attrition ~ Age + BusinssTrvl + DailyRate + DistncFrmHm + EducatinFld + 
+    EnvrnmntSts + Gender + JobInvlvmnt + JobRole + 
+    JobSatsfctn + NmCmpnsWrkd + OverTime + RltnshpStsf + StckOptnLvl + 
+    TtlWrkngYrs + TrnngTmsLsY + WorkLifBlnc + YrsInCrrntR + YrsSncLstPr + 
+    YrsWthCrrMn + logMthlyInc, data=talentManage, family=binomial(link = logit))
+
+summary(back2)
+
+# Check overall effect of JobRole using aod library
+wald.test(b=coef(back2), Sigma=vcov(back2), Terms=18:25)
+
+# Check overall effect of Education Field using aod library
+wald.test(b=coef(back2), Sigma=vcov(back2), Terms=6:10)
+
+car::vif(back2)
+```
+
+
+** Visual Inspection of the model 
+
+** Checking linear relationship between continuous predictor variables and the logit of the outcome. This can be done by visually inspecting the scatter plot between each predictor and the logit values.  
+
+** We see all other parameters except StandardHrs are all linearly associated
+```{r data for Analysis, echo=TRUE}
+probabilities <- predict(fullModel, type = "response")
+
+dataForAnalysis <- talentManage %>%
+  dplyr::select_if(is.numeric) 
+
+cor1 <- cor(data.matrix(talentManage), method=c("kendall"))
+corrplot(cor1)
+
+#dataForAnalysis[, rm("log")]
+predictors <- colnames(dataForAnalysis)
+
+#Bind the logit and tidying the data for plot
+dataForAnalysis <- dataForAnalysis %>%
+  mutate(logit = log(probabilities/(1-probabilities))) %>%
+  tidyr::gather(key = "predictors", value = "predictor.value", -logit)
+
+ggplot(dataForAnalysis, aes(logit, predictor.value))+
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "loess") + 
+  theme_bw() + 
+  facet_wrap(~predictors, scales = "free_y")+
+  labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+** Analysis of Data using forward selection: 
+** Model obtained using forward selection is
+Attrition ~ OverTime + JobRole + StckOptnLvl + JobLevel + EnvrnmntSts +
+    BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
+    TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
+    YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
+    DailyRate + Age
+
+```{r forward selection, echo=TRUE}
+## forward selection
+
+forwards = step(nothing, scope=list(lower=formula(nothing),upper=formula(fullModel)), direction="forward", trace=0)
+
+formula(forwards)
+```
+
+#### Check the vif for the forwards model. We do find that JobLevel and JobRole are highly correlated so doing chi-square test of independence  
+#### Chi- square test reveals that these two variables are independent   
+```{r vif chisq, echo=TRUE}
+# Variance inflation factor
+car::vif(forwards)
+
+#Check parameters selected are independent
+cJob <- cbind(talentManage$JobLevel, talentManage$JobRole)
+
+chisq.test(cJob)
+```
+
+### Removing JobLevel since JobRole and JobLevel are highly correlated
+```{r forward2, echo=TRUE}
+forward2 <- glm(Attrition ~ OverTime + JobRole + StckOptnLvl +  EnvrnmntSts +  
+    BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
+    TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
+    YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
+    DailyRate + Age, data=talentManage, family = binomial(link = logit))
+
+summary(forward2)
+
+#Get the correlation plot of the variables selected
+
+#Get the confidence intervals
+exp(cbind(coef(forward2), confint(forward2)))
+
+```
+
+** Analysis of Data using stepwise selection: 
+
+** Deviance obtained by all the above three methods is the same so any method of parameter selection could be used.
+```{r stepwise selection}
+# Stepwise method
+bothways = step(nothing, list(lower=formula(nothing),upper=formula(fullModel)), direction="both",trace=0)
+
+formula(bothways)
+
+backwards$deviance
+forwards$deviance
+bothways$deviance
+
+# Variance inflation factor
+car::vif(bothways)
+```
+
+## Goodness of Fit Test
+*** Check the likelihood ratio test of the nothing model with the forwards model as we will be using forwards model.
+*** We get a p-value less than 0.05 so we reject null hypothesis, so our forward2 model is better
+```{r likelihood ratio test, echo=TRUE}
+# Goodness of fit using LRT test
+library(lmtest)
+lrtest(forward2, nothing)
+
+# Goodness of fit test using Pseudo R^2
+pR2(forward2)
+```
+
+## Test of individual predictors  
+### The 3 best predictors for the model are OverTime, StckOptnLvl, Number of companies worked
+```{r waldtest, echo=TRUE}
+imp <- as.data.frame(varImp(forward2))
+imp <- data.frame(overall = imp$Overall,
+           names   = rownames(imp))
+imp[order(imp$overall,decreasing = T),]
+
+#print confusion Matrix to predict accuracy
+
+pred <- as.factor(ifelse(predict(forward2, type="response") > 0.5, 1,0))
+ref1 <- as.factor(ifelse(talentManage$Attrition == "Yes", 1, 0))
+confusionMatrix(data = pred, reference = ref1)
+```
+
+## Checking the model with Pearson Studentized residuals, cooksd, leverage and Standard Errors
+```{r InfluentialObs, echo=TRUE}
+#resid(forward2) 
+#forward2$residuals
+
+# partial residual plot against fitted values (explanatory variable)
+plot(residuals(forward2, type="pearson") ~ talentManage$Attrition, main="Partial residual Plot against fitted Values", xlab="Fitted Values", ylab="Partial Residual Plot")
+
+#Std.resid and cooks distance broom package augment
+model.data <- augment(forward2) %>% 
+  mutate(index = 1:n()) 
+
+#Plot the standardized residuals:
+ggplot(forward2, aes(.fitted, .resid)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Studentized residuals vs Fitted values", xlab="Fitted values", ylab="Studentized residuals")+
+  geom_smooth(se=F)
+
+ggplot(forward2, aes(seq_along(.cooksd), .cooksd)) + 
+  geom_line(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Cooks D vs observation number", xlab="Observation Nos", ylab="Cooks D values")
+
+#The data for the top 3 largest values, according to the Cook's distance, can be displayed as follow
+model.data %>% top_n(3, .cooksd)
+
+ggplot(model.data, aes(index, .se.fit)) + 
+  geom_point(aes(color = Attrition), alpha = .5) +
+  theme_bw()+
+  labs(title="Standard errors for Observation", xlab="Observations", ylab="Standard error")
+
+# Residual Vs Leverage
+ggplot(forward2, aes(.hat, .stdresid)) +
+  geom_vline(size = 2, colour = "white", xintercept = 0) +
+  geom_hline(size = 2, colour = "white", yintercept = 0) +
+  geom_point(aes(color = Attrition), alpha = .5) + geom_smooth(se = FALSE) +
+  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+
+ggplot(forward2, aes(.hat, .stdresid)) +
+  geom_point(aes(size = .cooksd, color = Attrition)) +
+  geom_smooth(se = FALSE, size = 0.5) +
+  labs(title="Residual Vs Leverage", xlab="Leverage", ylab="Studentized residuals")
+
+# Cooks distance Vs Leverage
+
+ggplot(forward2, aes(.hat, .cooksd)) +
+  geom_vline(xintercept = 0, colour = NA) +
+  geom_abline(slope = seq(0, 3, by = 0.5), colour = "white") +
+  geom_smooth(se = FALSE) +
+  geom_point(aes(color = Attrition), alpha = .5) +
+  labs(title="Cooks D distance Vs Leverage", xlab="Leverage", ylab="Cooks D distance")
+```
+
+
+
+b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
+
+```{r histograms, echo=TRUE}
+#age histogram
+age_hist <- as.data.frame.table(table(talentManage$Age))
+
+ggplot(data = age_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Age", y = "Frequency", title = "Histogram of Age") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Bsiness Travel histogram
+BusinssTrvl_hist <- as.data.frame.table(table(talentManage$BusinssTrvl))
+
+ggplot(data = BusinssTrvl_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Business Travel", y = "Frequency", title = "Business Travel Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Daily Rate histogram
+
+DailyRate <- cut(talentManage[,c("DailyRate")], breaks = c(100,300,600,900,1200,1500), labels = c("100-300", "301-600", "601-900", "901-1200", "1201-1500"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
+
+DailyRate_hist <- as.data.frame.table(table(DailyRate))
+
+ggplot(data = DailyRate_hist, mapping = aes(x=reorder(DailyRate, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Daily Rate", y = "Frequency", title = "Histogram of Daily Rate") + 
+  theme(plot.title = element_text(hjust = 0.5)) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+#Department histogram
+Department_hist <- as.data.frame.table(table(talentManage$Department))
+
+ggplot(data = Department_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Department", y = "Frequency", title = "Department Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Distance From Home histogram
+DistncFrmHm_hist <- as.data.frame.table(table(talentManage$DistncFrmHm))
+
+ggplot(data = DistncFrmHm_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Distance From Home", y = "Frequency", title = "Distance From Home Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Education histogram
+Education_hist <- as.data.frame.table(table(talentManage$Education))
+
+ggplot(data = Education_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Education", y = "Frequency", title = "Education Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Education Field histogram
+EducatinFld_hist <- as.data.frame.table(table(talentManage$EducatinFld))
+
+ggplot(data = EducatinFld_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Education Field", y = "Frequency", title = "Education Field Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Environemnt Status histogram
+EnvrnmntSts_hist <- as.data.frame.table(table(talentManage$EnvrnmntSts))
+
+ggplot(data = EnvrnmntSts_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Environment Status", y = "Frequency", title = "Environment Status Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Gender histogram
+Gender_hist <- as.data.frame.table(table(talentManage$Gender))
+
+ggplot(data = Gender_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Gender", y = "Frequency", title = "Gender Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Hourly Rate histogram
+HourlyRate_hist <- as.data.frame.table(table(talentManage$HourlyRate))
+
+ggplot(data = HourlyRate_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Hourly Rate", y = "Frequency", title = "Hourly Rate Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Involvement histogram
+JobInvlvmnt_hist <- as.data.frame.table(table(talentManage$JobInvlvmnt))
+
+ggplot(data = JobInvlvmnt_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Involvement", y = "Frequency", title = "Job Involvement Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+#Job Level histogram
+JobLevel_hist <- as.data.frame.table(table(talentManage$JobLevel))
+
+ggplot(data = JobLevel_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Level", y = "Frequency", title = "Job Level Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Role histogram
+JobRole_hist <- as.data.frame.table(table(talentManage$JobRole))
+
+ggplot(data = JobRole_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job Role", y = "Frequency", title = "Job Role Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Satisfaction histogram
+JobSatsfctn_hist <- as.data.frame.table(table(talentManage$JobSatsfctn))
+
+ggplot(data = JobSatsfctn_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job satisfaction", y = "Frequency", title = "Job Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Marital Status histogram
+MaritalStts_hist <- as.data.frame.table(table(talentManage$MaritalStts))
+
+ggplot(data = MaritalStts_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Marital Status", y = "Frequency", title = "Maital Status Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Job Satisfaction histogram
+
+MonthlyRate <- cut(talentManage[,c("MonthlyRate")], breaks = c(0,5000,10000,15000,20000,25000, 30000), labels = c("0-5000", "5001-10000", "10001-15000", "15001-20000", "20001-25000", "25001-30000"), right = TRUE, include.lowest = TRUE, ordered_result = TRUE)
+
+MonthlyRate_hist <- as.data.frame.table(table(MonthlyRate))
+
+ggplot(data = MonthlyRate_hist, mapping = aes(x=reorder(MonthlyRate, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Job satisfaction", y = "Frequency", title = "Job Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Number of Companies worked histogram
+NmCmpnsWrkd_hist <- as.data.frame.table(table(talentManage$NmCmpnsWrkd))
+
+ggplot(data = NmCmpnsWrkd_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Number of companies worked", y = "Frequency", title = "Number of companies worked Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Overtime histogram
+OverTime_hist <- as.data.frame.table(table(talentManage$OverTime))
+
+ggplot(data = OverTime_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Oertime", y = "Frequency", title = "Overtime Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Percent Salary Hike histogram
+PrcntSlryHk_hist <- as.data.frame.table(table(talentManage$PrcntSlryHk))
+
+ggplot(data = PrcntSlryHk_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Percent Salary", y = "Frequency", title = "Percent Salary Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Performance rating histogram
+PrfrmncRtng_hist <- as.data.frame.table(table(talentManage$PrfrmncRtng))
+
+ggplot(data = PrfrmncRtng_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Performance Rating", y = "Frequency", title = "Performance Rating Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Relationship Satisfaction histogram
+RltnshpStsf_hist <- as.data.frame.table(table(talentManage$RltnshpStsf))
+
+ggplot(data = RltnshpStsf_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Relationship Satisfaction", y = "Frequency", title = "Relationship Satisfaction Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Standard Hours histogram
+#StandardHrs_hist <- as.data.frame.table(table(talentManage$StandardHrs))
+
+#ggplot(data = StandardHrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+#  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+#  labs(x = "Standard Hours", y = "Frequency", title = "Standard Hours Histogram") + 
+#  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Stock Option Level histogram
+StckOptnLvl_hist <- as.data.frame.table(table(talentManage$StckOptnLvl))
+
+ggplot(data = StckOptnLvl_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Stock Option Level", y = "Frequency", title = "Stock Option Level Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Total Working years histogram
+TtlWrkngYrs_hist <- as.data.frame.table(table(talentManage$TtlWrkngYrs))
+
+ggplot(data = TtlWrkngYrs_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Total Working Hours", y = "Frequency", title = "Total Working Hours Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Training Time Last Year histogram
+TrnngTmsLsY_hist <- as.data.frame.table(table(talentManage$TrnngTmsLsY))
+
+ggplot(data = TrnngTmsLsY_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Training Time Last Year", y = "Frequency", title = "Training Time Last Year Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Work Life Balance histogram
+WorkLifBlnc_hist <- as.data.frame.table(table(talentManage$WorkLifBlnc))
+
+ggplot(data = WorkLifBlnc_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Work Life Balance", y = "Frequency", title = "Work Life Balance Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years at company histogram
+YersAtCmpny_hist <- as.data.frame.table(table(talentManage$YersAtCmpny))
+
+ggplot(data = YersAtCmpny_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years at Company", y = "Frequency", title = "Years at Company Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years in current role histogram
+YrsInCrrntR_hist <- as.data.frame.table(table(talentManage$YrsInCrrntR))
+
+ggplot(data = YrsInCrrntR_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years in Current Role", y = "Frequency", title = "Years in Current Role Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years since last promotion histogram
+YrsSncLstPr_hist <- as.data.frame.table(table(talentManage$YrsSncLstPr))
+
+ggplot(data = YrsSncLstPr_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years Since Last Promotion", y = "Frequency", title = "Years Since Last Promotion Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+
+#Years with Current Manager histogram
+YrsWthCrrMn_hist <- as.data.frame.table(table(talentManage$YrsWthCrrMn))
+
+ggplot(data = YrsWthCrrMn_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
+  geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
+  labs(x = "Years with Current Manager", y = "Frequency", title = "Years with Current Manager Histogram") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
+```
+
+c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
+
+```{r scatterplot1, echo=TRUE}
+
+ggplot(talentManage, aes(Age, MonthlyIncome, color=Gender)) + 
+  geom_point() +
+  labs(title="Scatter plot of Monthly Income vs Age", xlab="Age", ylab="Monthly Income")+
+  geom_smooth(method="lm", alpha=0.05)
+```
+
+d	What about Life Satisfaction?  Create another scatterplot.  Is there a discernible relationship there to what?   
+
+```{r}
+ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) + 
+  geom_point() +
+  labs(title="Scatter plot of Monthly Income vs Life Satisfction", xlab="Life Satisfaction", ylab="Monthly Income")+
+  geom_smooth(method="lm", alpha=0.05)
+
+```
+
