@@ -29,10 +29,9 @@ sessionInfo()
 talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\data\\casestudy2.csv")
 
 #talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
-```
+
 
 ## Thanks to RPubs Raju Rimal for this function
-```{r functionDiagPlot, echo=TRUE}
 
 diagPlot<-function(model){
     p1<-ggplot(model, aes(.fitted, .resid))+geom_point()
