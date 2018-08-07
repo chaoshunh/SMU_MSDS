@@ -12,9 +12,11 @@ output:
 
 
 ```
-## R version 3.3.2 (2016-10-31)
+## R version 3.4.3 (2017-11-30)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 17134)
+## Running under: Windows 10 x64 (build 15063)
+## 
+## Matrix products: default
 ## 
 ## locale:
 ## [1] LC_COLLATE=English_United States.1252 
@@ -28,47 +30,41 @@ output:
 ## [8] base     
 ## 
 ## other attached packages:
-##  [1] rms_5.1-2          SparseM_1.77       epiDisplay_3.5.0.1
-##  [4] nnet_7.3-12        foreign_0.8-67     corrplot_0.84     
-##  [7] purrr_0.2.4        broom_0.4.4        pROC_1.11.0       
-## [10] caret_6.0-79       lmtest_0.9-36      zoo_1.8-1         
-## [13] survey_3.33-2      Matrix_1.2-7.1     pscl_1.5.2        
-## [16] MASS_7.3-49        tidyr_0.8.0        Hmisc_4.1-1       
-## [19] Formula_1.2-3      survival_2.42-3    lattice_0.20-34   
-## [22] reshape2_1.4.3     aod_1.3            car_3.0-0         
-## [25] carData_3.0-1      qwraps2_0.3.0      scales_0.5.0      
-## [28] dplyr_0.7.4        dataMaid_1.1.2     ggplot2_2.2.1     
+##  [1] rms_5.1-1            SparseM_1.77         epiDisplay_3.2.2.0  
+##  [4] nnet_7.3-12          foreign_0.8-69       corrplot_0.77       
+##  [7] purrr_0.2.3          broom_0.4.2          pROC_1.10.0         
+## [10] caret_6.0-76         lmtest_0.9-35        zoo_1.8-0           
+## [13] survey_3.32-1        Matrix_1.2-12        pscl_1.5.1          
+## [16] MASS_7.3-47          tidyr_0.7.0          Hmisc_4.0-3         
+## [19] Formula_1.2-2        survival_2.41-3      lattice_0.20-35     
+## [22] reshape2_1.4.2       aod_1.3              car_2.1-5           
+## [25] qwraps2_0.2.4        scales_0.5.0         dplyr_0.7.2         
+## [28] dataMaid_0.9.2       ggplot2_2.2.1        RevoUtils_10.0.8    
+## [31] RevoUtilsMath_10.0.1
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] TH.data_1.0-9       colorspace_1.3-2    class_7.3-14       
-##  [4] rio_0.5.10          rprojroot_1.3-2     htmlTable_1.12     
-##  [7] base64enc_0.1-3     rstudioapi_0.7      DRR_0.0.3          
-## [10] MatrixModels_0.4-1  prodlim_2018.04.18  mvtnorm_1.0-7      
-## [13] lubridate_1.7.4     codetools_0.2-15    splines_3.3.2      
-## [16] mnormt_1.5-5        robustbase_0.92-8   knitr_1.20         
-## [19] RcppRoll_0.2.2      ddalpha_1.3.2       cluster_2.0.5      
-## [22] kernlab_0.9-25      sfsmisc_1.1-2       backports_1.1.2    
-## [25] assertthat_0.2.0    lazyeval_0.2.1      acepack_1.4.1      
-## [28] htmltools_0.3.6     quantreg_5.35       tools_3.3.2        
-## [31] bindrcpp_0.2.2      gtable_0.2.0        glue_1.2.0         
-## [34] Rcpp_0.12.16        cellranger_1.1.0    nlme_3.1-128       
-## [37] iterators_1.0.9     psych_1.8.4         timeDate_3043.102  
-## [40] gower_0.1.2         stringr_1.3.1       openxlsx_4.0.17    
-## [43] polspline_1.1.12    DEoptimR_1.0-8      ipred_0.9-6        
-## [46] parallel_3.3.2      sandwich_2.4-0      RColorBrewer_1.1-2 
-## [49] yaml_2.1.18         curl_3.2            gridExtra_2.3      
-## [52] pander_0.6.1        rpart_4.1-10        latticeExtra_0.6-28
-## [55] stringi_1.1.7       foreach_1.4.4       checkmate_1.8.5    
-## [58] lava_1.6.1          geometry_0.3-6      rlang_0.2.0        
-## [61] pkgconfig_2.0.1     evaluate_0.10.1     bindr_0.1.1        
-## [64] recipes_0.1.2       htmlwidgets_1.2     CVST_0.2-2         
-## [67] tidyselect_0.2.4    plyr_1.8.4          magrittr_1.5       
-## [70] R6_2.2.2            multcomp_1.4-8      dimRed_0.1.0       
-## [73] pillar_1.2.2        haven_1.1.1         withr_2.1.2        
-## [76] abind_1.4-5         tibble_1.4.2        rmarkdown_1.9      
-## [79] readxl_1.1.0        data.table_1.10.4-3 forcats_0.3.0      
-## [82] ModelMetrics_1.1.0  digest_0.6.14       stats4_3.3.2       
-## [85] munsell_0.4.3       magic_1.5-8
+##  [1] splines_3.4.3       foreach_1.4.5       assertthat_0.2.0   
+##  [4] stats4_3.4.3        latticeExtra_0.6-28 pander_0.6.1       
+##  [7] yaml_2.1.16         robustbase_0.92-8   pillar_1.0.1       
+## [10] backports_1.1.2     quantreg_5.33       glue_1.2.0         
+## [13] digest_0.6.13       RColorBrewer_1.1-2  checkmate_1.8.3    
+## [16] minqa_1.2.4         sandwich_2.4-0      colorspace_1.3-2   
+## [19] psych_1.7.8         htmltools_0.3.6     plyr_1.8.4         
+## [22] pkgconfig_2.0.1     mvtnorm_1.0-6       lme4_1.1-13        
+## [25] MatrixModels_0.4-1  htmlTable_1.9       tibble_1.4.1       
+## [28] mgcv_1.8-22         TH.data_1.0-8       lazyeval_0.2.1     
+## [31] mnormt_1.5-5        pbkrtest_0.4-7      magrittr_1.5       
+## [34] polspline_1.1.12    evaluate_0.10.1     nlme_3.1-131       
+## [37] tools_3.4.3         data.table_1.10.4-3 multcomp_1.4-6     
+## [40] stringr_1.2.0       munsell_0.4.3       cluster_2.0.6      
+## [43] bindrcpp_0.2        compiler_3.4.3      rlang_0.1.6        
+## [46] nloptr_1.0.4        iterators_1.0.9     htmlwidgets_0.9    
+## [49] base64enc_0.1-3     rmarkdown_1.8       ModelMetrics_1.1.0 
+## [52] codetools_0.2-15    gtable_0.2.0        R6_2.2.2           
+## [55] gridExtra_2.2.1     knitr_1.18          bindr_0.1          
+## [58] rprojroot_1.3-1     stringi_1.1.6       parallel_3.4.3     
+## [61] Rcpp_0.12.14        rpart_4.1-11        acepack_1.4.1      
+## [64] DEoptimR_1.0-8
 ```
 
 ## Thanks to RPubs Raju Rimal for this function
@@ -227,6 +223,15 @@ sapply(columns, nchar)
 ```
 
 **c.	Some columns are, due to Qualtrics, malfunctioning. **
+
+
+```r
+#basic statistics (EDA)
+visualize(talentManage)
+```
+
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-1.png)<!-- -->![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-2.png)<!-- -->![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-3.png)<!-- -->![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-4.png)<!-- -->![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-5.png)<!-- -->![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-6.png)<!-- -->
+from all the histogramm, we found there are eight columns data doesn't show normality. They are "DailyRate", "MonthlyRate", "Over18", "EmployeeCount", "StandardHours", "EducationField","HourlyRate". However, we don't kick off these columns at this step.
 
 **d.	Make sure your columns are the proper data types (i.e., numeric, character, etc.).  If they are incorrect, convert them.**
 
@@ -467,8 +472,8 @@ summary(sapply(talentManage$Age, function(x) x < 18))
 ```
 
 ```
-##    Mode   FALSE    NA's 
-## logical    1470       0
+##    Mode   FALSE 
+## logical    1470
 ```
 There are no participants under age 18.
 
@@ -480,8 +485,8 @@ summary(sapply(talentManage$Age, function(x) x >= 65))
 ```
 
 ```
-##    Mode   FALSE    NA's 
-## logical    1470       0
+##    Mode   FALSE 
+## logical    1470
 ```
 
 ```r
@@ -671,7 +676,7 @@ ggplot(data = talentManage) +
   guides(fill=FALSE)
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 Investigate whether there are differences in attrition by continuous and categorical variables (Age and Gender, Marital Status and distance from home, Income and Job Level)
 
@@ -683,7 +688,7 @@ ggplot((talentManage), aes(Age, as.numeric(Attrition)-1, color=Gender)) +
   labs(title = "Attrition levels by age and gender", x= "Age", y = "Proportion of Attrition")
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
 
 ```r
 # Using distance from home and Marital Status:
@@ -694,7 +699,7 @@ ggplot((talentManage), aes(DistncFrmHm, as.numeric(Attrition)-1, color=MaritalSt
   xlab("Distance from Home") + ylab("Attrition")
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-2.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-2.png)<!-- -->
 
 ```r
 # Using Montly Income and Job Level:
@@ -705,7 +710,7 @@ ggplot((talentManage), aes(MonthlyIncm, as.numeric(Attrition)-1, color=JobLevel)
   xlab("Monthly Income in US$") + ylab("Attrition")
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-3.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-3.png)<!-- -->
 
 ```r
 # Using Years in the Company
@@ -716,7 +721,7 @@ ggplot((talentManage), aes(YersAtCmpny, as.numeric(Attrition)-1, color=StckOptnL
   xlab("Years Worked at the Company") + ylab("Attrition")
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-4.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-4.png)<!-- -->
 
 ```r
 #Using Salary Hike and Overtime
@@ -727,7 +732,7 @@ ggplot((talentManage), aes(PrcntSlryHk, as.numeric(Attrition)-1, color=OverTime)
   xlab("Percentage Salary Hike") + ylab("Attrition")
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-3-5.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-5.png)<!-- -->
 
 Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
 
@@ -1094,81 +1099,81 @@ exp(cbind(coef(fullModel), confint(fullModel)))
 ```
 
 ```
-##                                                       2.5 %        97.5 %
-## (Intercept)                      2.210498e-01 1.682804e-103  3.951345e-24
-## Age                              9.744691e-01  9.463226e-01  1.002518e+00
-## BusinssTrvlTravel_Frequently     1.013160e+01  4.253248e+00  2.611388e+01
-## BusinssTrvlTravel_Rarely         3.519285e+00  1.598071e+00  8.417404e+00
-## DailyRate                        9.995740e-01  9.991023e-01  1.000042e+00
-## DepartmentResearch & Development 1.899405e+06  8.587748e+86 2.256095e+111
-## DepartmentSales                  9.875493e+05 4.854768e+190 2.419446e+116
-## DistncFrmHm                      1.059687e+00  1.035200e+00  1.085034e+00
-## Education2                       1.294383e+00  6.457451e-01  2.627579e+00
-## Education3                       1.206029e+00  6.517067e-01  2.280085e+00
-## Education4                       1.204354e+00  6.151438e-01  2.400759e+00
-## Education5                       9.041232e-01  2.196672e-01  3.259363e+00
-## EducatinFldLife Sciences         3.384993e-01  5.348235e-02  2.071111e+00
-## EducatinFldMarketing             5.943239e-01  8.522819e-02  4.036390e+00
-## EducatinFldMedical               3.133508e-01  4.902139e-02  1.929906e+00
-## EducatinFldOther                 4.219110e-01  5.853793e-02  2.914217e+00
-## EducatinFldTechnical Degree      1.022548e+00  1.608492e-01  6.493935e+00
-## EnvrnmntSts2                     3.300010e-01  1.823791e-01  5.879152e-01
-## EnvrnmntSts3                     2.817314e-01  1.631363e-01  4.814986e-01
-## EnvrnmntSts4                     2.205867e-01  1.258993e-01  3.807682e-01
-## GenderMale                       1.607208e+00  1.086537e+00  2.398291e+00
-## HourlyRate                       1.003040e+00  9.935581e-01  1.012663e+00
-## JobInvlvmnt2                     2.539397e-01  1.169881e-01  5.480999e-01
-## JobInvlvmnt3                     1.946129e-01  9.378440e-02  4.018336e-01
-## JobInvlvmnt4                     1.115240e-01  4.037572e-02  2.938978e-01
-## JobLevel2                        3.387691e-01  1.251416e-01  8.477472e-01
-## JobLevel3                        2.147374e+00  5.536375e-01  8.105510e+00
-## JobLevel4                        6.879040e-01  7.464790e-02  5.723262e+00
-## JobLevel5                        1.105714e+01  7.255083e-01  1.947605e+02
-## JobRoleHuman Resources           2.865178e+06 1.436814e+175 1.070085e+116
-## JobRoleLaboratory Technician     1.882934e+00  5.656579e-01  6.377425e+00
-## JobRoleManager                   7.263098e-01  6.843133e-02  5.106555e+00
-## JobRoleManufacturing Director    1.365668e+00  4.414590e-01  4.290694e+00
-## JobRoleResearch Director         1.411194e-01  1.093513e-02  1.084921e+00
-## JobRoleResearch Scientist        5.769705e-01  1.656087e-01  2.016874e+00
-## JobRoleSales Executive           7.312656e+00  5.933894e-01  1.106979e+02
-## JobRoleSales Representative      5.556373e+00  3.879534e-01  9.558093e+01
-## JobSatsfctn2                     5.065966e-01  2.819410e-01  9.008366e-01
-## JobSatsfctn3                     5.064674e-01  3.020527e-01  8.459511e-01
-## JobSatsfctn4                     2.598279e-01  1.485305e-01  4.483294e-01
-## MaritalSttsMarried               1.495561e+00  8.453275e-01  2.690652e+00
-## MaritalSttsSingle                2.106125e+00  9.261789e-01  4.900604e+00
-## MonthlyRate                      1.000012e+00  9.999859e-01  1.000039e+00
-## NmCmpnsWrkd1                     1.821580e+00  9.777807e-01  3.502304e+00
-## NmCmpnsWrkd2                     2.033191e+00  7.872446e-01  5.193911e+00
-## NmCmpnsWrkd3                     1.393029e+00  5.395119e-01  3.547485e+00
-## NmCmpnsWrkd4                     2.422274e+00  9.291820e-01  6.241573e+00
-## NmCmpnsWrkd5                     5.186743e+00  1.869627e+00  1.437244e+01
-## NmCmpnsWrkd6                     5.632513e+00  2.042101e+00  1.555042e+01
-## NmCmpnsWrkd7                     7.906994e+00  2.967636e+00  2.125968e+01
-## NmCmpnsWrkd8                     3.560797e+00  9.893996e-01  1.156574e+01
-## NmCmpnsWrkd9                     8.161129e+00  2.611825e+00  2.494631e+01
-## OverTimeYes                      9.455413e+00  6.192303e+00  1.472518e+01
-## PrcntSlryHk                      1.003127e+00  9.223344e-01  1.089903e+00
-## PrfrmncRtng4                     8.653123e-01  3.647409e-01  2.044499e+00
-## RltnshpStsf                      7.092395e-01  5.938179e-01  8.445247e-01
-## StckOptnLvl1                     3.224330e-01  1.669542e-01  6.235013e-01
-## StckOptnLvl2                     3.754226e-01  1.476235e-01  9.151713e-01
-## StckOptnLvl3                     7.169898e-01  2.645150e-01  1.889598e+00
-## TtlWrkngYrs                      9.511071e-01  8.891128e-01  1.013896e+00
-## TrnngTmsLsY1                     2.980843e-01  9.193958e-02  9.324840e-01
-## TrnngTmsLsY2                     2.222564e-01  9.252242e-02  5.426435e-01
-## TrnngTmsLsY3                     1.805214e-01  7.386956e-02  4.476256e-01
-## TrnngTmsLsY4                     3.120014e-01  1.127315e-01  8.646939e-01
-## TrnngTmsLsY5                     1.419680e-01  4.611888e-02  4.255061e-01
-## TrnngTmsLsY6                     1.251968e-01  3.087993e-02  4.616610e-01
-## WorkLifBlnc2                     3.446660e-01  1.564768e-01  7.682619e-01
-## WorkLifBlnc3                     2.129562e-01  1.016492e-01  4.523939e-01
-## WorkLifBlnc4                     3.391178e-01  1.375128e-01  8.346482e-01
-## YersAtCmpny                      1.097274e+00  1.004586e+00  1.199924e+00
-## YrsInCrrntR                      8.776303e-01  7.908893e-01  9.732020e-01
-## YrsSncLstPr                      1.188441e+00  1.085902e+00  1.303428e+00
-## YrsWthCrrMn                      8.620216e-01  7.787837e-01  9.541352e-01
-## logMthlyInc                      3.114344e-01  1.386090e-01  6.922765e-01
+##                                                       2.5 %       97.5 %
+## (Intercept)                      2.210498e-01 1.682804e-103 3.951345e-24
+## Age                              9.744691e-01  9.463226e-01 1.002518e+00
+## BusinssTrvlTravel_Frequently     1.013160e+01  4.253248e+00 2.611388e+01
+## BusinssTrvlTravel_Rarely         3.519285e+00  1.598071e+00 8.417404e+00
+## DailyRate                        9.995740e-01  9.991023e-01 1.000042e+00
+## DepartmentResearch & Development 1.899405e+06  9.266205e-29           NA
+## DepartmentSales                  9.875493e+05  9.923262e-10           NA
+## DistncFrmHm                      1.059687e+00  1.035200e+00 1.085034e+00
+## Education2                       1.294383e+00  6.457451e-01 2.627579e+00
+## Education3                       1.206029e+00  6.517067e-01 2.280085e+00
+## Education4                       1.204354e+00  6.151438e-01 2.400759e+00
+## Education5                       9.041232e-01  2.196672e-01 3.259363e+00
+## EducatinFldLife Sciences         3.384993e-01  5.348235e-02 2.071111e+00
+## EducatinFldMarketing             5.943239e-01  8.522819e-02 4.036390e+00
+## EducatinFldMedical               3.133508e-01  4.902139e-02 1.929906e+00
+## EducatinFldOther                 4.219110e-01  5.853793e-02 2.914217e+00
+## EducatinFldTechnical Degree      1.022548e+00  1.608492e-01 6.493935e+00
+## EnvrnmntSts2                     3.300010e-01  1.823791e-01 5.879152e-01
+## EnvrnmntSts3                     2.817314e-01  1.631363e-01 4.814986e-01
+## EnvrnmntSts4                     2.205867e-01  1.258993e-01 3.807682e-01
+## GenderMale                       1.607208e+00  1.086537e+00 2.398291e+00
+## HourlyRate                       1.003040e+00  9.935581e-01 1.012663e+00
+## JobInvlvmnt2                     2.539397e-01  1.169881e-01 5.480999e-01
+## JobInvlvmnt3                     1.946129e-01  9.378440e-02 4.018336e-01
+## JobInvlvmnt4                     1.115240e-01  4.037572e-02 2.938978e-01
+## JobLevel2                        3.387691e-01  1.251416e-01 8.477472e-01
+## JobLevel3                        2.147374e+00  5.536375e-01 8.105510e+00
+## JobLevel4                        6.879040e-01  7.464790e-02 5.723262e+00
+## JobLevel5                        1.105714e+01  7.255083e-01 1.947605e+02
+## JobRoleHuman Resources           2.865178e+06  3.363361e-05 8.363535e+90
+## JobRoleLaboratory Technician     1.882934e+00  5.656579e-01 6.377425e+00
+## JobRoleManager                   7.263098e-01  6.843133e-02 5.106555e+00
+## JobRoleManufacturing Director    1.365668e+00  4.414590e-01 4.290694e+00
+## JobRoleResearch Director         1.411194e-01  1.093513e-02 1.084921e+00
+## JobRoleResearch Scientist        5.769705e-01  1.656087e-01 2.016874e+00
+## JobRoleSales Executive           7.312656e+00  5.933894e-01 1.106979e+02
+## JobRoleSales Representative      5.556373e+00  3.879534e-01 9.558093e+01
+## JobSatsfctn2                     5.065966e-01  2.819410e-01 9.008366e-01
+## JobSatsfctn3                     5.064674e-01  3.020527e-01 8.459511e-01
+## JobSatsfctn4                     2.598279e-01  1.485305e-01 4.483294e-01
+## MaritalSttsMarried               1.495561e+00  8.453275e-01 2.690652e+00
+## MaritalSttsSingle                2.106125e+00  9.261789e-01 4.900604e+00
+## MonthlyRate                      1.000012e+00  9.999859e-01 1.000039e+00
+## NmCmpnsWrkd1                     1.821580e+00  9.777807e-01 3.502304e+00
+## NmCmpnsWrkd2                     2.033191e+00  7.872446e-01 5.193911e+00
+## NmCmpnsWrkd3                     1.393029e+00  5.395119e-01 3.547485e+00
+## NmCmpnsWrkd4                     2.422274e+00  9.291820e-01 6.241573e+00
+## NmCmpnsWrkd5                     5.186743e+00  1.869627e+00 1.437244e+01
+## NmCmpnsWrkd6                     5.632513e+00  2.042101e+00 1.555042e+01
+## NmCmpnsWrkd7                     7.906994e+00  2.967636e+00 2.125968e+01
+## NmCmpnsWrkd8                     3.560797e+00  9.893996e-01 1.156574e+01
+## NmCmpnsWrkd9                     8.161129e+00  2.611825e+00 2.494631e+01
+## OverTimeYes                      9.455413e+00  6.192303e+00 1.472518e+01
+## PrcntSlryHk                      1.003127e+00  9.223344e-01 1.089903e+00
+## PrfrmncRtng4                     8.653123e-01  3.647409e-01 2.044499e+00
+## RltnshpStsf                      7.092395e-01  5.938179e-01 8.445247e-01
+## StckOptnLvl1                     3.224330e-01  1.669542e-01 6.235013e-01
+## StckOptnLvl2                     3.754226e-01  1.476235e-01 9.151713e-01
+## StckOptnLvl3                     7.169898e-01  2.645150e-01 1.889598e+00
+## TtlWrkngYrs                      9.511071e-01  8.891128e-01 1.013896e+00
+## TrnngTmsLsY1                     2.980843e-01  9.193958e-02 9.324840e-01
+## TrnngTmsLsY2                     2.222564e-01  9.252242e-02 5.426435e-01
+## TrnngTmsLsY3                     1.805214e-01  7.386956e-02 4.476256e-01
+## TrnngTmsLsY4                     3.120014e-01  1.127315e-01 8.646939e-01
+## TrnngTmsLsY5                     1.419680e-01  4.611888e-02 4.255061e-01
+## TrnngTmsLsY6                     1.251968e-01  3.087993e-02 4.616610e-01
+## WorkLifBlnc2                     3.446660e-01  1.564768e-01 7.682619e-01
+## WorkLifBlnc3                     2.129562e-01  1.016492e-01 4.523939e-01
+## WorkLifBlnc4                     3.391178e-01  1.375128e-01 8.346482e-01
+## YersAtCmpny                      1.097274e+00  1.004586e+00 1.199924e+00
+## YrsInCrrntR                      8.776303e-01  7.908893e-01 9.732020e-01
+## YrsSncLstPr                      1.188441e+00  1.085902e+00 1.303428e+00
+## YrsWthCrrMn                      8.620216e-01  7.787837e-01 9.541352e-01
+## logMthlyInc                      3.114344e-01  1.386090e-01 6.922765e-01
 ```
 
 ```r
@@ -4752,7 +4757,14 @@ cbind(forwards$aic, bothways$aic)
 # nothing is the restricted model as it has only intercept whereas forward2 model has more variables
 library(lmtest)
 lrtest(forward2, nothing)
+```
 
+```
+## Likelihood ratio test for MLE method 
+## Chi-squared d.f. =  , P value =
+```
+
+```r
 # using manual calculation for lrttest
 #logLik(nothing)
 #logLik(forward2)
@@ -4950,7 +4962,29 @@ plot(residuals(forward2, type="pearson") ~ talentManage1$Attrition, main="Partia
 #Std.resid and cooks distance broom package augment
 model.data <- augment(forward2) %>% 
   mutate(index = 1:n()) 
+```
 
+```
+## Warning: Deprecated: please use `purrr::possibly()` instead
+```
+
+```
+## Warning: Deprecated: please use `purrr::possibly()` instead
+```
+
+```
+## Warning: Deprecated: please use `purrr::possibly()` instead
+```
+
+```
+## Warning: Deprecated: please use `purrr::possibly()` instead
+```
+
+```
+## Warning: Deprecated: please use `purrr::possibly()` instead
+```
+
+```r
 #Plot the standardized residuals:
 ggplot(forward2, aes(.fitted, .resid)) + 
   geom_point(aes(color = Attrition), alpha = .5) +
@@ -5453,5 +5487,5 @@ ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) +
   geom_abline()
 ```
 
-![](Attrition_Analysis_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+![](Attrition_Analysis_files/figure-html/unnamed-chunk-5-1.png)<!-- -->
 

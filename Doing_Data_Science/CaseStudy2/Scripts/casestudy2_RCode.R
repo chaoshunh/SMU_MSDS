@@ -1,16 +1,3 @@
----
-title: 'Analysis of Attrition Data: Main factors that affect Employee Turnover'
-author: "Chaoshun Hu, Mahesh Kuklani, Rene Pineda"
-date: "August 7, 2018"
-output:
-  html_document:
-    keep_md: yes
-  pdf_document: default
----
-
-
-
-```{r Loading packages and data, echo = FALSE, message=FALSE, warning=FALSE}
 #Install Packages
 library(dataMaid) #For quick data visualization
 library(dplyr) #For data cleaning and summarizing
@@ -81,77 +68,23 @@ diagPlot<-function(model){
     
     return(list(rvfPlot=p1, qqPlot=p2, sclLocPlot=p3, cdPlot=p4, rvlevPlot=p5, cvlPlot=p6))
 }
-```
-## Introduction
-
-Voluntary attrition occurs when an employee leaves a company of his or her own accord. This can occur when employees leave their current positions for another job, leave the workforce entirely, or retire. The reasons for leaving a company can vary from personal reasons, such as desiring career advancement or moving to a different city, to company-based reasons, such as an unwanted change in company structure or management.
-
-A high turnover rate typically means working conditions are not optimal, pay is below market average, or staffers are not well trained. Concurrently, a low turnover rate is indicative of a work environment where staffers feel appreciated, work as a team, have room to move up the corporate ladder, and are satisfied with their jobs.
-
-Attrition rates vary widely accross industries. The following tables show attrition rates in the United States:
-
-<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Attrition Statistics.jpg) -->
-
-Employee attrition statistics have worsened in recent years, after years of recovery over the recesion of 2008:
-
-<!-- ![](E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Project 2/Historical Attrition.jpg) --> 
-
-Source: CompData's 2016 edition of their annual BenchmarkPro Survey
-
-Companies usually would like to decrease their voluntary turnover rates due to numerous unfavorable impacts:
-
-* Overall poor company performance
-
-* Low employee morale
-
-* Operating and monetary costs (severance payments, cost of re-hiring and re-training)
-
-* Money invested in the employees that leave the company can't be recovered
-
-* The decrease in the workforce causes remaining employees to work on the slack left behind- mostly performing the task they are not completely trained to perform or are not the best suited
-
-* The situation may get out of control and lead to mass exit of employees, disabling the ability of the company to perform at a high level.
-
-In order to deal with employee attrition and deal with its negative impacts, it is important to know about the most important causes of Attrition. The purpose of this analysis is to try to dilucidate what are the most important factors that contribute to attrition, amongst the many factors that affect an employee's environment and satisfaction. Once these factors are determined, a company can take actions to control them. 
 
 
 ### 2.	Loading and cleaning the data 
 
-**a	Read the csv into R and take a look at the data set.  Output how many rows and columns the data.frame is.**
-```{r Question 2a, echo=TRUE, warning=FALSE, message=FALSE}
-dim(talentManage)
-```
-The `talentManage` data frame has 1470 rows and 35 columns. 
-
-**b	The column names are either too much or not enough.  Change the column names so that they do not have spaces, underscores, slashes, and the like. All column names should be under 12 characters. Make sure you’re updating your codebook with information on the tidied data set as well.**
-
-We use an R function to automatically abbreviate the variable names:
-```{r Question 2b, echo=TRUE, warning=FALSE, message=FALSE}
 #List column names
 colnames(talentManage)
 
 #Abbreviate column names
 colnames(talentManage)=abbreviate(colnames(talentManage), method=c("both.sides"),minlength = 11)
-```
 
-We will now list the column names again and count the characters to confirm confirm that none exceeds the 12-character limit
-```{r echo=TRUE, warning=FALSE, message=FALSE}
 columns <- colnames(talentManage)
 columns
 sapply(columns, nchar)
-```
 
-**c.	Some columns are, due to Qualtrics, malfunctioning. **
-
-```{r}
 #basic statistics (EDA)
 visualize(talentManage)
-```
-from all the histogramm, we found there are eight columns data doesn't show normality. They are "DailyRate", "MonthlyRate", "Over18", "EmployeeCount", "StandardHours", "EducationField","HourlyRate". However, we don't kick off these columns at this step.
 
-**d.	Make sure your columns are the proper data types (i.e., numeric, character, etc.).  If they are incorrect, convert them.**
-
-```{r Question 2c, echo=TRUE, warning=FALSE, message=FALSE}
 #copy the data to a new dataset talentManage1 for analysis
 talentManage1 <- talentManage
 
@@ -187,30 +120,19 @@ talentManage1$logMthlyInc <- log(talentManage$MonthlyIncm)
 
 #Check that all variables have the correct 'class'
 str(talentManage)
-```
 
 ### 3.	Preliminary Analysis
 
-**a	Remove all observations where the participant is under age 18.  No further analysis of underage individuals is permitted by your client.  Remove any other age outliers as you see fit, but be sure to tell what you’re doing and why.**
+#First we apply a function to check whether there are participants under age 18:
 
-First we apply a function to check whether there are participants under age 18:
-```{r Question 3a, echo=TRUE, warning=FALSE, message=FALSE}
 #Check every value of the 'Age' variable to see whether it is smaller than 18
 summary(sapply(talentManage$Age, function(x) x < 18))
-```
-There are no participants under age 18.
 
-Regarding outliers, we might want to remove participants who have passed the age of retirement (65 years old, although this has increased due to SS ammendments) and that might be having a negative impact in attrition rates, because attrition would be disproportionately high in this group. We can check this in the data
-```{r Question 3aout, echo=TRUE, warning=FALSE, message=FALSE}
 #Check every value of the 'Age' variable to see whether it is smaller than 18
 summary(sapply(talentManage$Age, function(x) x >= 65))
 retirement <- subset(talentManage$Age, talentManage$Age >=60)
 retirement  
-```
-We do not have instances of people 65 years old or older, and only a handful of participants are 60 years old. We proceed without eliminating any data points. 
 
-**b	Please provide (in table format or similar), descriptive statistics on at least 7 variables (age, Income, etc.).  Create a simple histogram for two of them.  Comment on the shape of the distribution in your markdown.**
-```{r Question 3b, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
 options(qwraps2_markup = "markdown")
 summary_numeric <- with(talentManage,
                 list("Age" = tab_summary(Age)[c(1,4,2,3)],
@@ -223,21 +145,13 @@ summary_numeric <- with(talentManage,
                      
 table_numeric <- summary_table(talentManage, summary_numeric)
 table_numeric
-```
 
-We want to see the histogram of the `Age` variable:
-```{r histogram Age, echo=TRUE}
 #Create the required histograms
 ggplot(data = talentManage, mapping = aes(Age)) +
   geom_histogram(binwidth = 5, color = "gray", fill = "royalblue1" ) +
   labs(x = "Age", y = "Frequency", title = "Histogram of Age") + 
   theme(plot.title = element_text(hjust = 0.5))
-```
 
-The shape of te histogram resembles a normal distribuiton, with a slight positive bias (mean > median)
-
-And now the histogram of the `Income` and `log(Income)` variable:
-```{r histogram income, echo=TRUE}
 ggplot(data = talentManage, mapping = aes(MonthlyIncm)) +
   geom_histogram(binwidth = 1000, color = "gray", fill = "orchid3" ) +
   labs(x = "Montly income (in US$)", y = "Frequency", title = "Histogram of Monthly Income") + 
@@ -249,12 +163,6 @@ ggplot(talentManage, aes(talentManage$logMthlyInc)) +
   labs(x = "Lof of Montly income log(US$)", y = "Frequency", title = "Histogram of Log of Monthly Income") +
   theme(plot.title = element_text(hjust = 0.5)) 
 
-```
-
-The histogram shows a strong positive skewness, which is typical of Income distributions: a small group of people in the organization have very high salaries. Logarithm of the income gives less skewness so we will proceed with log(MonthlyIncome) 
-
-**c	Give the frequencies (in table format or similar) for Gender, Education, and Occupation.  They can be separate tables, if that’s your choice.**
-```{r Question 3c, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
 # Summarize categorical variables with counts
 
 summary_factor <- with(talentManage,
@@ -264,10 +172,7 @@ summary_factor <- with(talentManage,
 
 table_factor <- summary_table(talentManage, summary_factor)
 table_factor
-```
 
-**d	Give the counts (again, table) of management positions.**
-```{r Question 3d, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
 #Management positions are 3 and above:
 paste(talentManage$JobRole[110:125], talentManage$JobLevel[110:125], sep = ",")
 
@@ -276,13 +181,7 @@ summary_positions <- with(talentManage,
 
 table_positions <- summary_table(talentManage, summary_positions)
 table_positions
-```
 
-### Additional Analysis
-
-Examine the proportion of attrition vs. No Attrition
-
-```{r echo = TRUE}
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = Attrition, fill = Attrition)) +
   annotate("text", label = "Yes = 233, or 15.9%", y=350, x=2) +
@@ -290,10 +189,7 @@ ggplot(data = talentManage) +
   labs(x = "Attrition", y = "Total", title = "Summary of Attrition") +
   theme(plot.title = element_text(hjust = 0.5)) +
   guides(fill=FALSE)
-```
 
-Investigate whether there are differences in attrition by continuous and categorical variables (Age and Gender, Marital Status and distance from home, Income and Job Level)
-```{r echo = TRUE}
 #Graphing Age and Gender
 ggplot((talentManage), aes(Age, as.numeric(Attrition)-1, color=Gender)) +
   stat_smooth(method="loess", formula=y~x, alpha=0.2, size=2, aes(fill=Gender)) +
@@ -329,11 +225,6 @@ ggplot((talentManage), aes(PrcntSlryHk, as.numeric(Attrition)-1, color=OverTime)
   xlab("Percentage Salary Hike") + ylab("Attrition")
 
 
-```
-
-Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
-
-```{r Additional bar graphs, echo=TRUE, results='asis'}
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobSatsfctn, fill = Attrition), position = "fill") +
   labs(x = "Job Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Satisfaction")
@@ -355,49 +246,27 @@ ggplot(data = talentManage) +
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = BusinssTrvl, fill = Attrition), position = "fill") +
   labs(x = "Business Travel", y = "Proportion", title = "Attrition for Business Travel")
-```
 
-Do people with a history of changing jobs have a larger tendency for Attrition (controlling by Environment Satisfaction)?
-```{r Number of jobs, echo = TRUE}
 ggplot((talentManage), aes(NmCmpnsWrkd, as.numeric(Attrition)-1, color=EnvrnmntSts)) +
   stat_smooth(method="loess", formula=y~x,
               alpha=0.2, size=2, aes(fill=EnvrnmntSts)) +
   geom_point(position=position_jitter(height=0.03, width=0)) +
   xlab("Number of previous Jobs") + ylab("Attrition")
-```
 
-
-We see very clear differences in Attrition by Job Role:
-```{r Job Role chart, echo=TRUE}
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobRole, fill = Attrition), position = "fill") +
   labs(x = "Job Role", y = "Proportion", title = "Attrition by Job Roles") +
   coord_flip()
-```
 
-Create the new variable `AggSatisfaction` that aggregates closely related variables: `Job Satisfaction`, `Job Involvement`, `Environment Satisfaction` and `Relationship Satisfaction`.
-
-```{r aggregate job satisfaction, echo=TRUE, message=FALSE, warning=FALSE}
 talentManage$AggStsfctn = (as.numeric(talentManage$EnvrnmntSts) + as.numeric(talentManage$JobInvlvmnt) + as.numeric(talentManage$JobSatsfctn) + as.numeric(talentManage$RltnshpStsf)) /4
-```
 
-Explore satisfaction levels by Job Role:
-
-```{r Job Role boxplot, echo=TRUE}
 ggplot(data = talentManage, aes(x=JobRole, y = AggStsfctn, color=JobRole)) + 
   geom_boxplot() +
   labs(x = "Job Role", y = "Aggregate Satisfaction", title = "Aggregate Satisfaction by Job Role") +
   coord_flip() +
   guides(colour=FALSE)
-```
 
 ### 4.	Deeper Analysis and Visualization 
-
-a	Note: You should make all of these appealing looking.  Remember to include things like a clean, informative title, axis labels that are in plain English, and readable axis values that do not overlap.
-
-** Analysis of Data using backward elimination:  
-**** VIF for backward elimination is within 1-2 so there is not a strong correlation between these parameters selected by the model
-```{r deeper analysis, echo=TRUE, warning=FALSE}
 
 talentManage1[, c("MonthlyIncm")] <- list(NULL)
 
@@ -457,15 +326,7 @@ summary(nothing)
 #wald.test(b=coef(back2), Sigma=vcov(back2), Terms=6:10)
 
 #car::vif(back2)
-```
 
-
-** Visual Inspection of the model 
-
-** Checking linear relationship between continuous predictor variables and the logit of the outcome. This can be done by visually inspecting the scatter plot between each predictor and the logit values.  
-
-** We see all other parameters except StandardHrs are all linearly associated
-```{r data for Analysis, echo=TRUE}
 probabilities <- round(predict(fullModel, type = "response"), 2)
 
 dataForAnalysis <- talentManage1 %>%
@@ -489,28 +350,16 @@ ggplot(dataForAnalysis, aes(logit, predictor.value))+
   facet_wrap(~predictors, scales = "free_y")+
   labs(title="Predicted values Vs Logit for Continuous variables", x="Logit Values", y="Predicted Values")+
   theme(plot.title = element_text(hjust = 0.5))
-```
 
-
-** Analysis of Data using forward selection: 
-** Model obtained using forward selection is
-Attrition ~ OverTime + JobRole + StckOptnLvl + JobLevel + EnvrnmntSts +
-    BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
-    TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
-    YrsInCrrntR + EducatinFld + TrnngTmsLsY + Gender + YrsWthCrrMn + 
-    DailyRate + Age
-
-```{r forward selection, echo=TRUE}
 ## forward selection
 
 forwards = step(nothing, scope=list(lower=formula(nothing),upper=formula(fullModel)), direction="forward", trace=0)
 
 formula(forwards)
-```
 
 #### Check the vif for the forwards model. We do find that JobLevel and JobRole are highly correlated so doing chi-square test of independence  
 #### Chi- square test reveals that these two variables are independent   
-```{r vif chisq, echo=TRUE}
+
 # Variance inflation factor
 car::vif(forwards)
 
@@ -518,10 +367,9 @@ car::vif(forwards)
 cJob <- cbind(talentManage1$JobLevel, talentManage1$JobRole)
 
 chisq.test(cJob)
-```
 
 ### Removing JobLevel since JobRole and JobLevel are highly correlated
-```{r forward2, echo=TRUE}
+
 forward2 <- glm(Attrition ~ OverTime + JobRole + StckOptnLvl +  EnvrnmntSts +  
     BusinssTrvl + JobInvlvmnt + DistncFrmHm + JobSatsfctn + NmCmpnsWrkd + 
     TtlWrkngYrs + WorkLifBlnc + RltnshpStsf + YrsSncLstPr + logMthlyInc + 
@@ -552,12 +400,7 @@ wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=25:33)
 
 # Check overall effect of Environment Status using aod library
 wald.test(b=coef(forward2), Sigma=vcov(forward2), Terms=13:15)
-```
 
-** Analysis of Data using stepwise selection: 
-
-** Deviance obtained by all the above three methods is the same so any method of parameter selection could be used.
-```{r stepwise selection}
 # Stepwise method
 bothways = step(nothing, list(lower=formula(nothing),upper=formula(fullModel)), direction="both",trace=0)
 
@@ -576,12 +419,6 @@ bothways$deviance
 #AIC values
 cbind(forwards$aic, bothways$aic)
 
-```
-
-## Goodness of Fit Test
-*** Check the likelihood ratio test of the nothing model with the forwards model as we will be using forwards model.
-*** We get a p-value less than 0.05 so we reject null hypothesis, so our forward2 model is better
-```{r likelihood ratio test, echo=TRUE}
 # Goodness of fit using LRT test
 # Null hypothesis is that restricted model is statistically better than the unrestricted model
 # nothing is the restricted model as it has only intercept whereas forward2 model has more variables
@@ -609,11 +446,10 @@ pR2(forward2)
 # Goodness of fit using the Hosmer-Lemeshow in R
 #library(ResourceSelection)
 #hl <- hoslem.test(forward2$model$Attrition, fitted(forward2), g=10)
-```
 
 ## Test of individual predictors  
-### The 3 best predictors for the model are OverTime, StckOptnLvl, Number of companies worked
-```{r waldtest, echo=TRUE}
+### The 3 best predictors for the model are OverTime, #StckOptnLvl, Number of companies worked
+
 imp <- as.data.frame(varImp(forward2))
 imp <- data.frame(overall = imp$Overall,
            names   = rownames(imp))
@@ -623,10 +459,10 @@ imp[order(imp$overall,decreasing = T),]
 pred <- as.factor(ifelse(predict(forward2, type="response") > 0.5, 1,0))
 ref1 <- as.factor(ifelse(talentManage1$Attrition == "Yes", 1, 0))
 confusionMatrix(data = pred, reference = ref1)
-```
+
 
 ## Checking the model with Pearson Studentized residuals, cooksd, leverage and Standard Errors
-```{r InfluentialObs, echo=TRUE}
+
 #resid(forward2) 
 #forward2$residuals
 
@@ -683,13 +519,8 @@ ggplot(forward2, aes(.hat, .cooksd)) +
   geom_point(aes(color = Attrition), alpha = .5) +
   labs(title="Cooks D distance Vs Leverage", x="Leverage", y="Cooks D distance") +
     theme(plot.title = element_text(hjust = 0.5))
-```
 
 
-
-b	Create bar charts in ggplot or similar. The bars should be in descending order, Use any color palette of your choice other than the default.
-
-```{r histograms, echo=TRUE}
 #age histogram
 age_hist <- as.data.frame.table(table(talentManage$Age))
 
@@ -936,26 +767,18 @@ ggplot(data = YrsWthCrrMn_hist, mapping = aes(x=reorder(Var1, -Freq), y=Freq)) +
   geom_bar(stat="identity", col = "gray", fill = "royalblue1" ) +
   labs(x = "Years with Current Manager", y = "Frequency", title = "Years with Current Manager Histogram") + 
   theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle=90, hjust=1))
-```
 
-c	Is there a relationship between Age and Income?  Create a scatterplot and make an assessment of whether there is a relationship.  Color each point based on the Gender of the participant.  You’re welcome to use lm() or similar functions to back up your claims.
-
-```{r scatterplot1, echo=TRUE}
 
 ggplot(talentManage1, aes(Age, MonthlyIncome, color=Gender)) + 
   geom_point() +
   labs(title="Scatter plot of Monthly Income vs Age", xlab="Age", ylab="Monthly Income")+
   geom_smooth(method="lm", alpha=0.05)
-```
 
-d	What about Life Satisfaction?  Create another scatterplot.  Is there a discernible relationship there to what?   
-
-```{r}
 ggplot(talentManage, aes(WorkLifBlnc, MonthlyIncome, color=Gender)) + 
   geom_point() +
   labs(title="Scatter plot of Monthly Income vs Life Satisfction", xlab="Life Satisfaction", ylab="Monthly Income")+
   geom_smooth(method="lm", alpha=0.05) +
   geom_abline()
 
-```
+
 

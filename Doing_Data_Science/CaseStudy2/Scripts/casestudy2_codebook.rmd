@@ -1,8 +1,11 @@
 ---
 title: "casestudy2_codebook"
-author: "Chaoshun"
-date: "July 24, 2018"
-output: word_document
+author: "Chaoshun Hu, Mahesh Kuklani, Rene Pineda"
+date: "August 7, 2018"
+output:
+  html_document:
+    keep_md: yes
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
