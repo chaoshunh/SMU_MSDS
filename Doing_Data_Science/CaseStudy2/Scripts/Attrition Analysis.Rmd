@@ -32,16 +32,16 @@ library(broom)
 library(purrr) #For keep function
 library(corrplot) # For correlation plot
 library(epiDisplay) # To calculate C-statistic and ROC curve
-
+library(rms)
 #getSessionInfo
 sessionInfo()
 
 #Load the data
 
-#talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
+talentManage <- read.delim('E:/Bibliotecas/Documents/Data Science/SMU/MSDS 6306 Doing Data Science/Case Study 2/SMU_MSDS/Doing_Data_Science/CaseStudy2/data/casestudy2.csv', header = TRUE, sep = ',')
 #talentManage <-read.csv("C:\\Users\\chux\\datascience\\MSDS6306CaseStudy2\\data\\casestudy2.csv")
 
-talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
+#talentManage <-read.csv("E:\\Mahesh\\SMU\\GitHub\\SMU_MSDS\\Doing_Data_Science\\CaseStudy2\\data\\casestudy2.csv")
 ```
 
 ## Thanks to RPubs Raju Rimal for this function
@@ -262,6 +262,9 @@ table_factor
 
 **d	Give the counts (again, table) of management positions.**
 ```{r Question 3d, echo=TRUE, warning=FALSE, message=FALSE, results='asis'}
+#Management positions are 3 and above:
+paste(talentManage$JobRole[110:125], talentManage$JobLevel[110:125], sep = ",")
+
 summary_positions <- with(talentManage,
                      list("Management Positions" = tab_summary(factor(JobLevel[JobLevel == 3 | JobLevel ==4 | JobLevel ==5]))))
 
@@ -311,6 +314,15 @@ ggplot((talentManage), aes(YersAtCmpny, as.numeric(Attrition)-1, color=StckOptnL
               alpha=0.2, size=2, aes(fill=StckOptnLvl)) +
   geom_point(position=position_jitter(height=0.03, width=0)) +
   xlab("Years Worked at the Company") + ylab("Attrition")
+
+#Using Salary Hike and Overtime
+ggplot((talentManage), aes(PrcntSlryHk, as.numeric(Attrition)-1, color=OverTime)) +
+  stat_smooth(method="loess", formula=y~x,
+              alpha=0.2, size=2, aes(fill=OverTime)) +
+  geom_point(position=position_jitter(height=0.03, width=0)) +
+  xlab("Percentage Salary Hike") + ylab("Attrition")
+
+
 ```
 
 Analyze if the proportion of Attrition vs. No Attrition varies significantly among different categorical variables, related to Job Satisfaction and organizational factors
@@ -320,6 +332,12 @@ ggplot(data = talentManage) +
   geom_bar(mapping = aes(x = JobSatsfctn, fill = Attrition), position = "fill") +
   labs(x = "Job Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Satisfaction")
 ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = EnvrnmntSts, fill = Attrition), position = "fill") +
+  labs(x = "Environment Satisfaction (4 is higher)", y = "Proportion", title = "Attrition by Level of Environment Satisfaction")
+ggplot(data = talentManage) + 
+  geom_bar(mapping = aes(x = RltnshpStsf, fill = Attrition), position = "fill") +
+  labs(x = "Relationship Satisfaction", y = "Proportion", title = "Attrition by Relationship Satisfaction")
+ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = JobInvlvmnt, fill = Attrition), position = "fill") +
   labs(x = "Job Involvement (4 is higher)", y = "Proportion", title = "Attrition by Level of Job Involvement")
 ggplot(data = talentManage) + 
@@ -328,9 +346,6 @@ ggplot(data = talentManage) +
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = YrsWthCrrMn, fill = Attrition), position = "fill") +
   labs(x = "Years with Current Manager", y = "Proportion", title = "Attrition levels by Years with Current Manager")
-ggplot(data = talentManage) + 
-  geom_bar(mapping = aes(x = RltnshpStsf, fill = Attrition), position = "fill") +
-  labs(x = "Relationship Satisfaction", y = "Proportion", title = "Attrition by Relationship Satisfaction")
 ggplot(data = talentManage) + 
   geom_bar(mapping = aes(x = BusinssTrvl, fill = Attrition), position = "fill") +
   labs(x = "Business Travel", y = "Proportion", title = "Attrition for Business Travel")
